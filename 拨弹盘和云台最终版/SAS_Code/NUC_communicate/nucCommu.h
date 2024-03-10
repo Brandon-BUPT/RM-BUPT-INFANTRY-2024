@@ -1,0 +1,86 @@
+#ifndef NUC_COMMU_H
+#define NUC_COMMU_H
+
+#include "struct_typedef.h"
+#define SOF1 0xA5
+#define SOF2 0x5A
+
+#define NUCINFO_RX_BUF_NUM 46u
+#define NUCINFO_FRAME_LENGTH 23u
+
+enum Robot_Colors
+{
+	COLOR_RED,
+	COLOR_BLUE
+}; // ????????
+
+enum Task_Types
+{
+	NUC_SHOOT_ENEMY_CAR,
+	NUC_SHOOT_ENEMY_SENTRY,
+	NUC_SHOOT_ENEMY_BASE,
+	NUC_WINDMILL
+};
+// ??????????          ?????????            ??????????            ?????¼f???????????
+enum Robot_ID
+{
+	UNKNOWN,
+	HERO_1,
+	ENGINEER_2,
+	STANDARD_3,
+	STANDARD_4,
+	STANDARD_5,
+	GUARD_6,
+	SENTRY_7
+};
+
+enum Auto_Num
+{
+	No,
+	Normal,
+	Energy,
+	lob
+};
+
+enum Attack_mode
+{
+	Attack_forbidden,
+	Attack_free
+};
+
+typedef union
+{
+	fp64 data;
+	uint8_t bytes[8];
+} RxFP64Data;
+
+typedef union
+{
+	fp32 data;
+	uint8_t bytes[4];
+} RxFP32Data;
+typedef struct
+{
+	RxFP64Data yaw;
+	RxFP64Data pitch;
+	uint8_t is_fire;
+	RxFP32Data confidence;
+} toSTM32_t;
+
+// ???????nuc???????
+extern void nuc_control_init(void);
+
+// ???????›¥???nuc????????
+extern const toSTM32_t *get_nuc_control_point(void);
+
+// NUC????????????
+// added at 2022??1??26??23??54???NUC??§¹??? ???????
+void setNUCValid(void);
+void setNUCInvalid(void);
+uint32_t getNUCLastValidTime_ms(void);
+int NUCIsValid(void);
+extern void Encode(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll, enum Robot_Colors self_color, enum Robot_ID self_id,  enum Auto_Num auto_num,enum Attack_mode attack_mode);
+// ????????1??¦Ä???????0.???????????????'S'??????
+// int foundArmor(void);
+
+#endif // !NUC_COMMU_H
