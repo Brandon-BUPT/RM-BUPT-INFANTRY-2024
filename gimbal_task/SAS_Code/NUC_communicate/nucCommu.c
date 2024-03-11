@@ -10,6 +10,7 @@
 #include <string.h>
 #include "bsp_buzzer.h"
 #include "usb_task.h"
+#include "CRC8_CRC16.h"
 
 extern UART_HandleTypeDef huart1;
 extern DMA_HandleTypeDef hdma_usart1_rx;
@@ -71,27 +72,32 @@ void Encode(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_r
     RawData[0] = 0xE7;
     RawData[1] = 0x7E;
 
-	  //发送任务码 1：云台数据
-		RawData[2]=0x01;
-		memcpy(&RawData[3], &gimbal_yaw, sizeof(fp64));
+    // 发送任务码 1：云台数据
+    RawData[2] = 0x01;
+    memcpy(&RawData[3], &gimbal_yaw, sizeof(fp64));
     memcpy(&RawData[11], &gimbal_pitch, sizeof(fp64));
-	  memcpy(&RawData[19], &gimbal_roll, sizeof(fp64));
-	
-	  //发送任务码 2：机器人相关数据
-		RawData[27] = 0xE7;
-	  RawData[28] = 0x7E;
-		RawData[29]=0x02;
+    memcpy(&RawData[19], &gimbal_roll, sizeof(fp64));
+
+    // 添加CRC校验码
+    append_CRC16_check_sum(RawData, 29);
+
+    // 发送任务码 2：机器人相关数据
+    RawData[29] = 0xE7;
+    RawData[30] = 0x7E;
+    RawData[31] = 0x02;
     uint8_t id = (uint8_t) self_id;
     uint8_t color = (uint8_t) self_color;
-	  uint8_t A_num =(uint8_t)auto_num;
-	  uint8_t A_mode = (uint8_t)attack_mode;
-	  memcpy(&RawData[30],&color,sizeof(uint8_t));
-		memcpy(&RawData[31],&id,sizeof(uint8_t));
-    memcpy(&RawData[32],&A_num, sizeof(uint8_t));
-	
-    memcpy(&RawData[33],&A_mode, sizeof(uint8_t));
-	
+    uint8_t A_num = (uint8_t) auto_num;
+    uint8_t A_mode = (uint8_t) attack_mode;
+    memcpy(&RawData[32], &color, sizeof(uint8_t));
+    memcpy(&RawData[33], &id, sizeof(uint8_t));
+    memcpy(&RawData[34], &A_num, sizeof(uint8_t));
+    memcpy(&RawData[35], &A_mode, sizeof(uint8_t));
+
+    // 添加CRC校验码
+    append_CRC16_check_sum(&RawData[29], 9);
 }
+
 
 
 
