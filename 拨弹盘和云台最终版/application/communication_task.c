@@ -3,7 +3,7 @@
  * @file    communication_task.c
  * @author  Hu Zijian
  * @version V2.0.0
- * @date    2022/2/23
+ * @date    2024/3/10
  * @brief
  ******************************************************************************
  * @attention
@@ -26,9 +26,10 @@ void communication_task(void const *pvParameters){
 		
     while (1)
     {
-        Encode(GimbalAngleMsg,get_INS()->Yaw,get_INS()->Pitch,get_INS()->Roll,0,3,1,0);
+        Encode(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll,0,3,1,0);
 				HAL_UART_Transmit(&huart1, GimbalAngleMsg, 34, 100);
 				usart1_tx_dma_enable(GimbalAngleMsg, 34);
+				HAL_Delay(4);
 				CAN1_send_yaw();
 				CAN1_send_channel();
 				osDelay(1);    
