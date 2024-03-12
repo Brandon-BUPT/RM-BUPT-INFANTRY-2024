@@ -112,15 +112,15 @@ void Fuzzy_Rule_Implementation(FuzzyRule_t *fuzzyRule, float measure, float ref)
 
 /******************************* PID CONTROL *********************************/
 // PID优化环节函数声明
-static void f_Trapezoid_Intergral(PID_t *pid);
-static void f_Integral_Limit(PID_t *pid);
-static void f_Derivative_On_Measurement(PID_t *pid);
-static void f_Changing_Integration_Rate(PID_t *pid);
-static void f_Output_Filter(PID_t *pid);
-static void f_Derivative_Filter(PID_t *pid);
-static void f_Output_Limit(PID_t *pid);
-static void f_Proportion_Limit(PID_t *pid);
-static void f_PID_ErrorHandle(PID_t *pid);
+static void f_Trapezoid_Intergral(PID_plus_t *pid);
+static void f_Integral_Limit(PID_plus_t *pid);
+static void f_Derivative_On_Measurement(PID_plus_t *pid);
+static void f_Changing_Integration_Rate(PID_plus_t *pid);
+static void f_Output_Filter(PID_plus_t *pid);
+static void f_Derivative_Filter(PID_plus_t *pid);
+static void f_Output_Limit(PID_plus_t *pid);
+static void f_Proportion_Limit(PID_plus_t *pid);
+static void f_PID_ErrorHandle(PID_plus_t *pid);
 
 /**
  * @brief          PID初始化   PID initialize
@@ -128,8 +128,8 @@ static void f_PID_ErrorHandle(PID_t *pid);
  * @param[in]      略
  * @retval         返回空      null
  */
-void PID_Init(
-    PID_t *pid,
+void PID_plus_Init(
+    PID_plus_t *pid,
     float max_out,
     float intergral_limit,
     float deadband,
@@ -193,7 +193,7 @@ void PID_Init(
  * @param[in]      期望值
  * @retval         返回空
  */
-float PID_Calculate(PID_t *pid, float measure, float ref)
+float PID_Calculate(PID_plus_t *pid, float measure, float ref)
 {
     if (pid->Improve & ErrorHandle)
         f_PID_ErrorHandle(pid);
@@ -271,7 +271,7 @@ float PID_Calculate(PID_t *pid, float measure, float ref)
     return pid->Output;
 }
 
-static void f_Trapezoid_Intergral(PID_t *pid)
+static void f_Trapezoid_Intergral(PID_plus_t *pid)
 {
     if (pid->FuzzyRule == NULL)
         pid->ITerm = pid->Ki * ((pid->Err + pid->Last_Err) / 2) * pid->dt;
@@ -279,7 +279,7 @@ static void f_Trapezoid_Intergral(PID_t *pid)
         pid->ITerm = (pid->Ki + pid->FuzzyRule->KiFuzzy) * ((pid->Err + pid->Last_Err) / 2) * pid->dt;
 }
 
-static void f_Changing_Integration_Rate(PID_t *pid)
+static void f_Changing_Integration_Rate(PID_plus_t *pid)
 {
     if (pid->Err * pid->Iout > 0)
     {
@@ -294,7 +294,7 @@ static void f_Changing_Integration_Rate(PID_t *pid)
     }
 }
 
-static void f_Integral_Limit(PID_t *pid)
+static void f_Integral_Limit(PID_plus_t *pid)
 {
     static float temp_Output, temp_Iout;
     temp_Iout = pid->Iout + pid->ITerm;
@@ -321,7 +321,7 @@ static void f_Integral_Limit(PID_t *pid)
     }
 }
 
-static void f_Derivative_On_Measurement(PID_t *pid)
+static void f_Derivative_On_Measurement(PID_plus_t *pid)
 {
     if (pid->FuzzyRule == NULL)
     {
@@ -339,19 +339,19 @@ static void f_Derivative_On_Measurement(PID_t *pid)
     }
 }
 
-static void f_Derivative_Filter(PID_t *pid)
+static void f_Derivative_Filter(PID_plus_t *pid)
 {
     pid->Dout = pid->Dout * pid->dt / (pid->Derivative_LPF_RC + pid->dt) +
                 pid->Last_Dout * pid->Derivative_LPF_RC / (pid->Derivative_LPF_RC + pid->dt);
 }
 
-static void f_Output_Filter(PID_t *pid)
+static void f_Output_Filter(PID_plus_t *pid)
 {
     pid->Output = pid->Output * pid->dt / (pid->Output_LPF_RC + pid->dt) +
                   pid->Last_Output * pid->Output_LPF_RC / (pid->Output_LPF_RC + pid->dt);
 }
 
-static void f_Output_Limit(PID_t *pid)
+static void f_Output_Limit(PID_plus_t *pid)
 {
     if (pid->Output > pid->MaxOut)
     {
@@ -363,7 +363,7 @@ static void f_Output_Limit(PID_t *pid)
     }
 }
 
-static void f_Proportion_Limit(PID_t *pid)
+static void f_Proportion_Limit(PID_plus_t *pid)
 {
     if (pid->Pout > pid->MaxOut)
     {
@@ -376,7 +376,7 @@ static void f_Proportion_Limit(PID_t *pid)
 }
 
 // PID ERRORHandle Function
-static void f_PID_ErrorHandle(PID_t *pid)
+static void f_PID_ErrorHandle(PID_plus_t *pid)
 {
     /*Motor Blocked Handle*/
     if (pid->Output < pid->MaxOut * 0.001f || fabsf(pid->Ref) < 0.0001f)

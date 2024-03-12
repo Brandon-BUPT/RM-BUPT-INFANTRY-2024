@@ -13,5 +13,5 @@ void gimbal_task(void const *pvParameters);
 
 const struct GimbalToChassis_s * getBadYawWantedSpd(void);
 const int16_t * getGimbalNowRoundsPoint(void);
-extern const struct gimbalMotorCtrl_s* get_wantedyaw_point();
+extern const struct gimbalMotorCtrl_s* get_wantedyaw_point(void);
 #endif

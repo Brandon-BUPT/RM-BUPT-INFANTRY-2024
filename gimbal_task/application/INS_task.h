@@ -76,5 +76,5 @@ void QuaternionToEularAngle(float *q, float *Yaw, float *Pitch, float *Roll);
 void EularAngleToQuaternion(float Yaw, float Pitch, float Roll, float *q);
 void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q);
 void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q);
-extern INS_t* get_INS();
+extern INS_t* get_INS(void);
 #endif

@@ -128,7 +128,6 @@ const static RC_ctrl_t *rc_p;
 static const enum RobotState_e *robotMode;   //机器人模式
 static const toSTM32_t *nuc_p;  //NUC数据位置。未来制造全自动机器人时需要
 
-static int is_auto=0;
 static int highspeedshoot=0;
 static int16_t giveShootCurrent[2];
 int16_t giveTriggerCurrent;
@@ -183,12 +182,12 @@ static void getInstructionAndBuff(void)
     static uint8_t up=0,down=0;
     zeroCurrentMark=0;
 
-    if(rc_p->mouse.press_r||rc_p->rc.ch[4]>500)
+    if(robotIsAuto())
     {
         #ifdef TEAMER_ALLOW_SHOOT
         if(nuc_p->nucSayWeShouldShootNow && rc_p->mouse.press_r)    // 按下右键，操作手允许NUC控制发射。
         #else                                     
-        if(nuc_p->is_fire)
+        if(nuc_p->is_fire||(nuc_p->confidence.data>0.85))
         #endif
             insBuff.shootOne=1;
     }
@@ -526,14 +525,6 @@ void shoot_task(void const *pvParameters)
     // triggerMonitorSubOn=1;
     while(1)
     {
-				if(rc_p->mouse.press_r||rc_p->rc.ch[4]>500)
-				{
-					is_auto=1;
-				}
-				else
-				{
-					is_auto=0;
-				}
         getInstructionAndBuff();    //获取指令并缓冲
         fricModeChange();           //摩擦轮状态改变
         //若摩擦轮关闭状态，则清除单发和连发指令

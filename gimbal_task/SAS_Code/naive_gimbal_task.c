@@ -288,10 +288,11 @@ static int16_t press_x=0;
 static const RC_ctrl_t *rc_p;   //遥控器位置指针，需要初始化
 static const toSTM32_t *nuc_p;  //NUC数据位置
 
-// 用于与底盘通信的数据.只用于badyaw模式控制旋转角速度
+//自瞄控制
+double delta_pitch,delta_yaw;
+
 static struct GimbalToChassis_s toChassis={0,0};
-static uint8_t GimbalAngleMsg[34];
-static int is_auto=0;
+
 static void initGimbalCtrls(void)
 {
     uint8_t i;
@@ -517,20 +518,22 @@ void getControlAngles(void)
 				if(gimbalYawCtrl.wantedAbsoluteAngle<=-3.196)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
-				//usart_printf("%f,%f\r\n",gimbalYawCtrl.wantedAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle);
-			if(rc_p->mouse.press_r||rc_p->rc.ch[4]>500)
+
+
+			if(robotIsAuto())
 			{
-				is_auto=1;
+				delta_pitch = nuc_p->pitch.data;
+				delta_yaw = nuc_p->yaw.data;
 				gimbalPitchCtrl.wantedAbsoluteAngle=gimbalPitchCtrl.nowAbsoluteAngle;
 				gimbalYawCtrl.wantedAbsoluteAngle=gimbalYawCtrl.nowAbsoluteAngle;
-			  gimbalPitchCtrl.wantedAbsoluteAngle +=nuc_p->pitch.data;
-			  gimbalYawCtrl.wantedAbsoluteAngle -=nuc_p->yaw.data;
-
 			}
 			else
 			{
-				is_auto=0;
+				delta_pitch = 0;
+				delta_yaw = 0;
 			}
+			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
+			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
     }
     
     lastMode=*robotMode;

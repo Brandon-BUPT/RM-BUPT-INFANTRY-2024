@@ -19,6 +19,8 @@
 #include "usart.h"
 #include "bsp_usart.h"
 #include "cmsis_os.h"
+#include "CAN_receive.h"
+#include "robot_total_mode.h"
 
 
 //******************全局变量*******************
@@ -29,7 +31,7 @@ void communication_task(void const *pvParameters){
 		
     while (1)
     {
-        Encode(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll,0,3,1,0);
+        Encode(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll,get_refree_point()->robot_color,3,1,robotIsAuto());
 				HAL_UART_Transmit(&huart1, GimbalAngleMsg, 34, 100);
 				usart1_tx_dma_enable(GimbalAngleMsg, 34);
 				osDelay(4);

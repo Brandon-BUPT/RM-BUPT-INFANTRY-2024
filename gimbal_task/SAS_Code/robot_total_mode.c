@@ -116,14 +116,14 @@ void robot_total_mode_task(void const *pvParameters)
             }
         }  
         //Ì½²â¼üÅÌÊó±ê×´Ì¬
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_Z)
+        if(rc_p->mouse.press_r||rc_p->rc.ch[4]>500)
         {
             robotAuto=1;
             keyBoardAndMouseHasChanged=1;
 					  //usart_printf("yes\r\n");
 					  
         }
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_X)
+        else
         {
             robotAuto=0;
             keyBoardAndMouseHasChanged=1;

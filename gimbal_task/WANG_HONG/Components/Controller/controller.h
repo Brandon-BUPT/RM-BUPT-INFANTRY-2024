@@ -146,10 +146,10 @@ typedef __packed struct pid_t
 
     void (*User_Func1_f)(struct pid_t *pid);
     void (*User_Func2_f)(struct pid_t *pid);
-} PID_t;
+} PID_plus_t;
 
-void PID_Init(
-    PID_t *pid,
+void PID_plus_Init(
+    PID_plus_t *pid,
     float max_out,
     float intergral_limit,
     float deadband,
@@ -167,7 +167,7 @@ void PID_Init(
     uint16_t ols_order,
 
     uint8_t improve);
-float PID_Calculate(PID_t *pid, float measure, float ref);
+float PID_plus_Calculate(PID_plus_t *pid, float measure, float ref);
 
 /*************************** FEEDFORWARD CONTROL *****************************/
 typedef __packed struct
