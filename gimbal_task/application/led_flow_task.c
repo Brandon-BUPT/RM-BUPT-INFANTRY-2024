@@ -20,7 +20,7 @@
 #include "main.h"
 
 
-#define RGB_FLOW_COLOR_CHANGE_TIME  1000
+#define RGB_FLOW_COLOR_CHANGE_TIME  500
 #define RGB_FLOW_COLOR_LENGHT   6
 //blue-> green(dark)-> red -> blue(dark) -> green(dark) -> red(dark) -> blue
 //À¶ -> ÂÌ(Ãð) -> ºì -> À¶(Ãð) -> ÂÌ -> ºì(Ãð) -> À¶ 

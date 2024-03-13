@@ -234,7 +234,7 @@ static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[
  */
 void IMU_Temperature_Ctrl(void)
 {
-    PID_Calculate(&TempCtrl, BMI088.Temperature, RefTemp);
+    PID_plus_Calculate(&TempCtrl, BMI088.Temperature, RefTemp);
 
     TIM_Set_PWM(&htim10, TIM_CHANNEL_1, float_constrain(float_rounding(TempCtrl.Output), 0, UINT32_MAX));
 }

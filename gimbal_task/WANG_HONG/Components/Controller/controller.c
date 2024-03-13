@@ -193,7 +193,7 @@ void PID_plus_Init(
  * @param[in]      期望值
  * @retval         返回空
  */
-float PID_Calculate(PID_plus_t *pid, float measure, float ref)
+float PID_plus_Calculate(PID_plus_t *pid, float measure, float ref)
 {
     if (pid->Improve & ErrorHandle)
         f_PID_ErrorHandle(pid);
@@ -449,8 +449,8 @@ void Feedforward_Init(
 }
 
 /**
- * @brief          PID计算
- * @param[in]      PID结构体
+ * @brief          前馈计算
+ * @param[in]      前馈结构体
  * @param[in]      测量值
  * @param[in]      期望值
  * @retval         返回空

@@ -239,12 +239,12 @@ void CAN2_send_super_c_control(int16_t a,int16_t b,int16_t c){
 	can2_tx_message_super_c_ctrl.IDE=CAN_ID_STD;
 	can2_tx_message_super_c_ctrl.RTR=CAN_RTR_DATA;
 	can2_tx_message_super_c_ctrl.DLC=0x08;
-	can2_send_super_c_ctrl[0]=0x3f;
-	can2_send_super_c_ctrl[1]=0x3f;
-	can2_send_super_c_ctrl[2]=0x3f;
-	can2_send_super_c_ctrl[3]=0x3f;
-	can2_send_super_c_ctrl[4]=0x3f;
-	can2_send_super_c_ctrl[5]=0x3f;
+	can2_send_super_c_ctrl[0]=a>>8;
+	can2_send_super_c_ctrl[1]=a;
+	can2_send_super_c_ctrl[2]=b>>8;
+	can2_send_super_c_ctrl[3]=b;
+	can2_send_super_c_ctrl[4]=c>>8;
+	can2_send_super_c_ctrl[5]=c;
 	can2_send_super_c_ctrl[6]=0x3F;
 	can2_send_super_c_ctrl[7]=0x3f;
 	HAL_CAN_AddTxMessage(&hcan2,&can2_tx_message_super_c_ctrl,can2_send_super_c_ctrl,&send_mail_box);

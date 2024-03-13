@@ -17,43 +17,6 @@
 #ifndef ROBOT_TOTAL_MODE_H
 #define ROBOT_TOTAL_MODE_H
 
-// 底盘和云台都有被控量和控制量的切换。
-// 目标来源：NUC？遥控器和键盘？
-// 被控制：底盘电机旋转速度？yaw反馈ECD角度？
-// 控制方法：底盘轮子电机旋转？pitch电机旋转？yaw电机旋转？
-
-//version 0.1
-// enum RobotState_e{
-//     RobotState_e_Powerless,      // 无力状态，当遥控器掉线时使用，也便于在场上推动机器人运动。这时，所有机构发送零电流。
-//                                 //auto 模式下，依然无力
-//     RobotState_e_StickyYaw,      // 固定云台方位。对于我们第一版的、云台轴承阻力过大的机器人使用。这时，云台yaw发送零电压，底盘独立运动。
-//                                 //遥控器左摇杆控制pitch俯仰和原地旋转，右摇杆控制前后左右平移。
-//                                 //键盘wasd控制前后左右平移，鼠标控制pitch俯仰和原地旋转。
-//                                 //鼠标相当于遥控器左摇杆，键盘wasd相当于遥控器右摇杆
-//                             //当云台在场上卡住时，可以按下G手动切换到此模式。（表示云台yaw 寄了）yaw恒为0电流
-//                             //需要提前获取云台指向角度。可在config里设置开启OLED输出云台ECD
-//                                 //auto 模式下，pitch电机自动运动，底盘自动旋转。
-
-                                
-//     RobotState_e_GoodYawButNoFollow,    // 云台与底盘相对独立，底盘独立控制方位。
-//                                         // 
-//                                         // 可以用来测试云台的驱动能力
-//                                         // 鼠标控制云台绝对角度旋转。（用yaw电机的旋转和pitch电机的旋转控制云台姿态绝对角度）
-//                                         // wasd控制底盘前后运动、旋转速度。（直接控制底盘轮子电机转动速度，控制目标是底盘电机转动速度）
-//                                         // 底盘前后方向是：键盘直接表示底盘坐标系中的速度
-
-//     RobotState_e_ChassisFollowGimbal,    // 底盘跟随云台，只是跟随角度。这时，云台必须是能完全控制且为绝对角度控制的。
-//                                     //亦即，需要GoodYawButNoFollow通过测试。
-//                                     // 
-//                                     // 可是这就和大阻力轴承StickYaw模式相同了。对于我们那个轴承二者没有区别
-//                                     // 那么这个就只能作为底盘回正了（一键回正）
-//                             // 底盘通过旋转自己减小和云台的角度差。云台受手动或者自动控制。云台为绝对角度控制，靠底盘旋转改变云台相对底盘ECD角度
-//     RobotState_e_QuasiSpinner,   // 准小陀螺运动模式——用于没有电滑环但还是可以靠软件控制旋转一定圈数范围。
-//                     // 此时云台是绝对角度控制，底盘是绝对角速度控制（闭环控制轮子电机转速，但是不管实际整体转速）
-//                     // 按下shift键开启。使用宏定义确定是准小陀螺还是小陀螺
-//     RobotState_e_Spinner,        // 小陀螺模式，此时云台绝对角度控制，底盘绝对角速度（同上）
-// };
-
 //version 0.2
 //shift 开启摩擦轮，ctrl关闭摩擦轮
 // 鼠标左键按一下发射一个，按住连发，右键按住允许nuc控制发射（nuc可以选择单发或者连发）
@@ -85,7 +48,7 @@ enum RobotState_e{
                                 // auto NUC控制云台独立方向
 };
 
-int robotIsAuto(void);  // 对外提供的接口，返回目前机器人是否自动
+extern int robotIsAuto(void);  // 对外提供的接口，返回目前机器人是否自动
 const enum RobotState_e * getRobotPresentMode(void);  //返回机器人当前状态指针
 void robot_total_mode_task(void const *pvParameters);
 

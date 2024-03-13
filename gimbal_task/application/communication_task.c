@@ -32,12 +32,11 @@ void communication_task(void const *pvParameters){
     while (1)
     {
         Encode(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll,get_refree_point()->robot_color,3,1,robotIsAuto());
-				HAL_UART_Transmit(&huart1, GimbalAngleMsg, 34, 100);
-				usart1_tx_dma_enable(GimbalAngleMsg, 34);
+				HAL_UART_Transmit(&huart1, GimbalAngleMsg, 38, 100);
+				usart1_tx_dma_enable(GimbalAngleMsg, 38);
 				osDelay(4);
 				CAN1_send_yaw();
+				CAN1_send_channel();    
 				osDelay(2);
-				CAN1_send_channel();
-				osDelay(2);    
 		}
 }

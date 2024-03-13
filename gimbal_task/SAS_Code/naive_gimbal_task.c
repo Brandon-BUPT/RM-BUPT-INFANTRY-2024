@@ -115,15 +115,15 @@
 #define PITCH_SPD_KP 10000000.0f
 // #define PITCH_SPD_KP 10000000.0f
 
-#define PITCH_SPD_KI 200.0f
-#define PITCH_SPD_KD 0.0f
+#define PITCH_SPD_KI 1000.0f
+#define PITCH_SPD_KD 100.0f
                             
 #define PITCH_VOLT_MAX_OUT  30000.0f    // prev ent overflow of control control volt
                                         // because the control volt is -30000~30000
-#define PITCH_VOLT_MAX_IOUT 1000.0f
+#define PITCH_VOLT_MAX_IOUT 3000.0f
 
 //输入角度 rad ，输出角速度rad/s 的PID系数
-#define PITCH_AGL_KP 0.009f
+#define PITCH_AGL_KP 0.05f
 #define PITCH_AGL_KI 0.0001f
 #define PITCH_AGL_KD 0.00f
 
@@ -518,8 +518,7 @@ void getControlAngles(void)
 				if(gimbalYawCtrl.wantedAbsoluteAngle<=-3.196)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
-
-
+//			usart_printf("%d\r\n",robotIsAuto());
 			if(robotIsAuto())
 			{
 				delta_pitch = nuc_p->pitch.data;
@@ -632,6 +631,7 @@ void calcPID(void)
         first_order_filter_cali(&(c->spd_filter),(c->agl_pid).out);
 
         #endif
+
         PID_calc(&(c->spd_pid),c->radSpeed,(c->spd_filter).out);   // 普通的速度控制环
         c->giveVolt=c->spd_pid.out;     //给电压
 				//usart_printf("%d\r\n",c->giveVolt);
@@ -681,7 +681,7 @@ void gimbal_task(void const *pvParameters)
         CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,-gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
 
 				
-				//usart_printf("%f,%f,%f,%f\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle,gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle);
+//				usart_printf("%f,%f,%f,%f\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle,gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle);
 				osDelay(GIMBAL_TASK_CTRL_TIME);
 				
 
