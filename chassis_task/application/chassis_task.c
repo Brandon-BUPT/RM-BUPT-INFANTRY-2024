@@ -103,7 +103,7 @@
 // #define YAW_AGL_KP 0.07f
 #define YAW_AGL_KP 0.05f
 #define YAW_AGL_KI 0.00f
-#define YAW_AGL_KD 0.000f
+#define YAW_AGL_KD 0.00f
 
 #define YAW_AGL_SPD_MAX_OUT (50.0f)
 #define YAW_AGL_SPD_MAX_IOUT (11.7f)

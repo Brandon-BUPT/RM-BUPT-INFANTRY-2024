@@ -27,7 +27,7 @@
 //以下三个宏定义只能开一个
 //#define CHASSIS_POWER_CONTROL_OFFICIAL //打开官代底盘功率控制函数
 #define CHASSIS_POWER_CONTROL_NO_POWER_BUFF //不使用超级电容 底盘功率控制函数
-//#defineas //使用超级电容 底盘功率控制函数
+//#define  CHASSIS_POWER_CONTROL_POWER_BUFF //使用超级电容 底盘功率控制函数
 
 //#define CHASSIS_POWER_CONTROL_BLOOD_FIRST_POWER_1 55 //一级血量优先 功率限制
 //#define CHASSIS_POWER_CONTROL_BLOOD_FIRST_POWER_2 60 //二级血量优先 功率限制
@@ -177,8 +177,11 @@ void chassis_power_control(chassis_move_t *chassis_power_control)
     fp32 total_current = 0.0f;
     uint8_t robot_id = get_robot_id();
     uint8_t robot_level = get_robot_level();
-		WARNING_POWER = 55;
-    WARNING_POWER = get_robot_chassis_power_limit();
+		if(get_robot_chassis_power_limit()!=0)
+			    WARNING_POWER = get_robot_chassis_power_limit();
+		else
+			WARNING_POWER = 55;
+
 		fp32 current_power, current_buffer, power_scale;
 		get_chassis_power_and_buffer(&current_power, &current_buffer);
     if(toe_is_error(REFEREE_TOE))
