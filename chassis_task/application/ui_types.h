@@ -5,12 +5,9 @@
 #ifndef SERIAL_TEST_UI_TYPES_H
 #define SERIAL_TEST_UI_TYPES_H
 #include <stdint.h>
-#ifdef __GNUC__
+
 #define MESSAGE_PACKED __attribute__((packed))
 
-#else
-#define MESSAGE_PACKED
-#endif
 
 #define PRIMITIVE_CAT(x, y) x ## y
 #define CAT(x, y) PRIMITIVE_CAT(x, y)
@@ -73,7 +70,8 @@ typedef struct {
 typedef struct {
     uint8_t SOF;
     uint16_t length;
-    uint8_t seq, crc8;
+    uint8_t seq; 
+	  uint8_t crc8;
     uint16_t cmd_id, sub_id;
     uint16_t send_id, recv_id;
 } MESSAGE_PACKED ui_frame_header_t;

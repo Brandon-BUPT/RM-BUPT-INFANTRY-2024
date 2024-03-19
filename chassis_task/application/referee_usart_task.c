@@ -43,13 +43,13 @@
   */
 static void referee_unpack_fifo_data(void);
 
-static void referee_ui(void);
+static void referee_ui(int count);
 
 static void referee_ui_init(void);
 
 static void referee_ui_refresh(void);
 
-static void referee_ui_transmit(void);
+static void referee_ui_transmit(int count);
 extern UART_HandleTypeDef huart6;
 
 uint8_t usart6_buf[2][USART_RX_BUF_LENGHT];
@@ -80,7 +80,7 @@ void referee_usart_task(void const * argument)
 			if(count%10==0)
         referee_unpack_fifo_data();
 			if(count%100 == 0)	
-				referee_ui();
+				referee_ui(count);
 			
 			
 			count++;
@@ -197,10 +197,11 @@ void referee_unpack_fifo_data(void)
 }
 
 //主要发送逻辑
-static void referee_ui(void)
+static void referee_ui(int count)
 {
 	referee_ui_init();
-	referee_ui_transmit();
+	
+	referee_ui_transmit(count);
 }
 /*
 	代码思路：
@@ -214,19 +215,20 @@ static void referee_ui(void)
 	*/
 ui_5_frame_t layer0;//射击线
 ui_2_frame_t layer1;//车道线
-ui_5_frame_t layer2;//字符串
+ui_string_frame_t layer2;//字符串
 ui_2_frame_t layer3;//动态圆形
 ui_2_frame_t layer4;//动态圆形加条
 ui_7_frame_t layer5;//射击线2
+ui_1_frame_t layer6;//电容框
 //增加静态图层
-void ui_draw_lineandrect(ui_interface_figure_t *line,const char figure_name[3], int operate_tpyel, int layer, int color,
+void ui_draw(ui_interface_figure_t *line,const char figure_name[3], int operate_tpyel, int figure_tpye,int layer, int color,
                   int start_x, int start_y, int width, int end_x, int end_y) 
 {
 	line->figure_name[0] = figure_name[0];
 	line->figure_name[1] = figure_name[1];
 	line->figure_name[2] = figure_name[2];
 	line->operate_tpyel = operate_tpyel;
-	line->figure_tpye = 0 ;
+	line->figure_tpye = figure_tpye ;
 	line->layer = layer;
 	line->color = color;
 	line->start_x = start_x;
@@ -239,12 +241,47 @@ void ui_draw_lineandrect(ui_interface_figure_t *line,const char figure_name[3], 
 	line->_e = end_y;
 }
 
+void ui_draw_round(ui_interface_figure_t *line,const char figure_name[3], int operate_tpyel, int figure_tpye,int layer, int color,
+                  int start_x, int start_y, int width, int radis)
+{
+	line->figure_name[0] = figure_name[0];
+	line->figure_name[1] = figure_name[1];
+	line->figure_name[2] = figure_name[2];
+	line->operate_tpyel = operate_tpyel;
+	line->figure_tpye = figure_tpye ;
+	line->layer = layer;
+	line->color = color;
+	line->start_x = start_x;
+	line->start_y = start_y;
+	line->width = width;
+	line->_c = radis;
+}
+
+void ui_draw_string(ui_interface_string_t *str,const char figure_name[3], int operate_tpyel, int figure_tpye,int layer, int color,
+                  int start_x, int start_y,int width,int font,int length,const char *string)
+{
+	str->figure_name[0] = figure_name[0];
+	str->figure_name[1] = figure_name[1];
+	str->figure_name[2] = figure_name[2];
+	str->operate_tpyel = operate_tpyel;
+	str->figure_tpye = figure_tpye ;
+	str->layer = layer;
+	str->color = color;
+	str->start_x = start_x;
+	str->start_y = start_y;
+	str->width = width;
+	str->font_size = font;
+	str->str_length = 30;
+	for(int i=0;i<strlen(string);i++)
+		str->string[i]=string[i];
+}
+
 
 static void referee_ui_init(){
 	//layer0
 	layer0.data[0].figure_name[0] = 'a';
 	layer0.data[0].figure_name[1] = 'a';
-	layer0.data[0].figure_name[2] = 'a';
+	layer0.data[0].figure_name[2] = '\0';
 	layer0.data[0].operate_tpyel = 1;
 	layer0.data[0].figure_tpye  = 0;
 	layer0.data[0].layer = 0;
@@ -257,27 +294,94 @@ static void referee_ui_init(){
 	layer0.data[0]._c = 0;
 	layer0.data[0]._d = 1255;
 	layer0.data[0]._e = 538;
+	ui_draw(&layer0.data[1],"bb",1,0,0,2,1920/2,119,1,1920/2,539);
+	ui_draw(&layer0.data[2],"cc",1,1,0,3,737,344,3,737+454,344+454);
+	ui_draw(&layer0.data[3],"dd",1,0,0,2,743,480,1,1181,480);
+	ui_draw(&layer0.data[4],"ee",1,0,0,2,882,441,1,1033,441);
 	
-	ui_draw_lineandrect(&layer0.data[1],"bbb",1,0,2,1920/2,119,1,1920/2,539);
-	ui_draw_lineandrect(&layer0.data[2],"ccc",1,0,3,737,344,3,737+454,344+454);
-	ui_draw_lineandrect(&layer0.data[3],"ddd",1,0,2,743,480,1,1181,480);
-	ui_draw_lineandrect(&layer0.data[4],"eee",1,0,2,882,441,1,1033,441);
 	
 	//layer1
+	ui_draw(&layer1.data[0],"ff",1,0,1,8,551,207,1,652,632);
+	ui_draw(&layer1.data[1],"gg",1,0,1,8,1268,610,1,1369,207);
+	
+  //layer2
+	ui_draw_string(&layer2.option,"en",1,7,2,2,115,730,5,40,30,"AIM :\nSPIN:\nFRIC:\n");
+	
+	//layer3
+	ui_draw_round(&layer3.data[0],"spi",1,2,0,2,316,644,1,18);
+	ui_draw_round(&layer3.data[1],"frc",1,2,0,2,316,575,1,18);
+	
+	//layer4
+	ui_draw_round(&layer4.data[0],"aut",1,2,0,2,316,719,1,18);
+	ui_draw(&layer4.data[1],"cap",1,0,1,0,660,80,20,1260,80);
+	
+	//layer5
+	ui_draw(&layer5.data[0],"hh",1,0,0,2,814,423,1,1103,423);
+	ui_draw(&layer5.data[1],"ii",1,0,0,2,877,411,1,1037,411);
+	ui_draw(&layer5.data[2],"jj",1,0,0,2,933,382,1,983,382);
+	ui_draw(&layer5.data[3],"kk",1,0,0,2,933,395,1,981,395);
+	ui_draw(&layer5.data[4],"ll",1,0,0,2,935,369,1,979,369);
+	ui_draw(&layer5.data[5],"mm",1,0,0,2,934,356,1,983,356);
+	ui_draw(&layer5.data[6],"nn",1,0,0,2,935,342,1,985,342);
 }
 //刷新动态图层
 
 //填充打包发送
-char buffer[200];
-static void referee_ui_transmit(){
-	ui_proc_5_frame(&layer0);
-	memcpy(buffer, &layer0, sizeof(ui_5_frame_t));
-	usart6_tx_dma_enable((uint8_t *)buffer,sizeof(layer0));
-//	ui_proc_2_frame(&layer1);
+uint8_t buffer[400];
+static void referee_ui_transmit(int count){
+	if((count/100)%10==0)
+	{
+		ui_proc_5_frame(&layer0);
+		memcpy(buffer, &layer0, sizeof(ui_5_frame_t));
+		HAL_UART_Transmit(&huart6,buffer,sizeof(ui_5_frame_t),100);
+		usart6_tx_dma_enable(buffer,sizeof(ui_5_frame_t));
+		osDelay(2);
+	}
+		if((count/100)%10==1)
+	{
+		ui_proc_2_frame(&layer1);
+		memcpy(buffer, &layer1, sizeof(ui_2_frame_t));
+		HAL_UART_Transmit(&huart6,buffer,sizeof(ui_2_frame_t),100);
+		usart6_tx_dma_enable(buffer,sizeof(ui_2_frame_t));
+		osDelay(2);
+	}
+		if((count/100)%10==2)
+	{
+		ui_proc_7_frame(&layer5);
+		memcpy(buffer, &layer5, sizeof(ui_7_frame_t));
+		HAL_UART_Transmit(&huart6,buffer,sizeof(ui_7_frame_t),200);
+		usart6_tx_dma_enable(buffer,sizeof(ui_7_frame_t));
+		osDelay(2);
+	}
+		if((count/100)%10==3)
+	{
+		ui_proc_string_frame(&layer2);
+		memcpy(buffer, &layer2, sizeof(layer2));
+		HAL_UART_Transmit(&huart6,buffer,sizeof(layer2),200);
+		usart6_tx_dma_enable(buffer,sizeof(layer2));
+		osDelay(2);
+	}
+		if((count/100)%3==0)
+	{
+		ui_proc_2_frame(&layer3);
+		memcpy(buffer, &layer3, sizeof(ui_2_frame_t));
+		HAL_UART_Transmit(&huart6,buffer,sizeof(ui_2_frame_t),200);
+		usart6_tx_dma_enable(buffer,sizeof(ui_2_frame_t));
+		osDelay(2);
+	}
+
+			if((count/100)%3==1)
+	{
+		ui_proc_2_frame(&layer4);
+		memcpy(buffer, &layer4, sizeof(ui_2_frame_t));
+		HAL_UART_Transmit(&huart6,buffer,sizeof(ui_2_frame_t),200);
+		usart6_tx_dma_enable(buffer,sizeof(ui_2_frame_t));
+		osDelay(2);
+	}
+
 //	ui_proc_5_frame(&layer2);
 //	ui_proc_2_frame(&layer3);
 //	ui_proc_2_frame(&layer4);
-//	ui_proc_7_frame(&layer5);
 }
 
 void USART6_IRQHandler(void)
