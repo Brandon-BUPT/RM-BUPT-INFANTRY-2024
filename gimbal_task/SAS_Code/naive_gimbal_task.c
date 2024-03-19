@@ -63,8 +63,8 @@
 #define PITCH_TEST_MIN_ANGLE_ECD 3828
 // #define PITCH_TEST_ANGLE_ECD_LENGTH 1039
 
-#define PITCH_TEST_RAD_MIN (-0.39f)
-#define PITCH_TEST_RAD_MAX  (0.20f)
+#define PITCH_TEST_RAD_MIN (-0.28f)
+#define PITCH_TEST_RAD_MAX  (0.38f)
 
 #define YAW_TEST_INIT_ANGLE_MIDDLE_ECD 3557
 #define YAW_TEST_MAX_ANGLE_ECD 5616
@@ -115,7 +115,7 @@
 #define PITCH_SPD_KP 10000000.0f
 // #define PITCH_SPD_KP 10000000.0f
 
-#define PITCH_SPD_KI 1000.0f
+#define PITCH_SPD_KI 100.0f
 #define PITCH_SPD_KD 100.0f
                             
 #define PITCH_VOLT_MAX_OUT  30000.0f    // prev ent overflow of control control volt
@@ -131,21 +131,24 @@
 #define PITCH_AGL_SPD_MAX_IOUT (1.0f)
 
 
-#define YAW_SPD_KP 20000.0f
-#define YAW_SPD_KI 0.0f
-#define YAW_SPD_KD 400.0f
+//yawPID锟剿诧拷
+#define YAW_SPD_KP 1300000.0f
+#define YAW_SPD_KI 1000.0f
+#define YAW_SPD_KD 100.0f
 
-#define YAW_VOLT_MAX_OUT  29998.0f
-#define YAW_VOLT_MAX_IOUT 1000.0f
+#define YAW_VOLT_MAX_OUT  30000.0f
+#define YAW_VOLT_MAX_IOUT 3000.0f
 
 // #define YAW_AGL_KP 0.07f
-#define YAW_AGL_KP 0.007f
-
-#define YAW_AGL_KI 0.0f
-#define YAW_AGL_KD 0.0f
+#define YAW_AGL_KP 0.05f
+#define YAW_AGL_KI 0.00f
+#define YAW_AGL_KD 0.00f
 
 #define YAW_AGL_SPD_MAX_OUT (50.0f)
 #define YAW_AGL_SPD_MAX_IOUT (11.7f)
+
+#define YAW_SPD_FILTER_NUM 1.0f
+
 
 
 
@@ -218,7 +221,6 @@
 // #define YAW_SPD_FILTER_NUM 15.0f
 
 #define PITCH_SPD_FILTER_NUM 0.001f
-#define YAW_SPD_FILTER_NUM 0.001f
 
 
  #define LimitMax(input, max)   \
@@ -502,7 +504,7 @@ void getControlAngles(void)
         
 			  
 				//pitch轴目标值控制
-				gimbalPitchCtrl.wantedAbsoluteAngle+=20*pitch_channel*PITCH_RC_SEN-20*rc_p->mouse.y*PITCH_MOUSE_SEN;
+				gimbalPitchCtrl.wantedAbsoluteAngle-=20*pitch_channel*PITCH_RC_SEN-20*rc_p->mouse.y*PITCH_MOUSE_SEN;
 //				//gimbalPitchCtrl.wantedAbsoluteAngle += adjust_channel(pitch_channel, K_CTRL_PROP_Y, K_CTRL_EXP_Y) * PITCH_RC_SEN - adjust_channel(rc_p->mouse.y, K_CTRL_MOUSE_Y, K_CTRL_EXP_Y) * PITCH_MOUSE_SEN ;
 //				if(gimbalPitchCtrl.wantedAbsoluteAngle>=0.2)
 //					gimbalPitchCtrl.wantedAbsoluteAngle=0.2;
@@ -678,10 +680,10 @@ void gimbal_task(void const *pvParameters)
         }
 				limitAnglesSecond();
         calcPID();              // 总是控制角度，双环，但测试时需要
-        CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,-gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
-
+        CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
+				CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
 				
-//				usart_printf("%f,%f,%f,%f\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle,gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle);
+//				ylYawCtrl.nowECD);
 				osDelay(GIMBAL_TASK_CTRL_TIME);
 				
 

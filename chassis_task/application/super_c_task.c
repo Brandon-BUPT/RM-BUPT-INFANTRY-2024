@@ -17,12 +17,18 @@ int16_t b = (a - a_min) / (a_max - a_min) * (float)(b_max - b_min) +
 
 void super_c_task(void const * arguement)
 {
-	  fp32 power, buffer;
-		get_chassis_power_and_buffer(&power, &buffer);
+			  fp32 power, buffer;
 	while(1)
 	{		
-		CAN2_send_super_c_buffer(float_to_int16(buffer,0.0,60.0,-32000,32000));
-		CAN2_send_super_c_control(get_robot_chassis_power_limit(),100,100);
-		osDelay(10);
+
+		get_chassis_power_and_buffer(&power, &buffer);
+
+
+		osDelay(2);
+//		CAN2_send_super_c_buffer((int16_t)buffer);
+		osDelay(2);
+//		CAN2_send_super_c_control(get_robot_chassis_power_limit(),300,150);
+//		
+		
 	}
 }

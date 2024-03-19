@@ -125,6 +125,7 @@ extern void CAN1_send_channel(void);
 extern void CAN1_send_nuc_yaw(void);
 extern const can_send_referee_s* get_refree_point(void);
 extern void CAN1_send_keyboard(void);
+extern void CAN_cmd_yaw(int16_t yaw);
 #endif
 
 /*Ê¾Àý

@@ -173,7 +173,51 @@ typedef __packed struct
     uint8_t data[32];
 } ext_download_stream_data_t;
 
+typedef __packed struct
+{
+ uint16_t data_cmd_id;
+ uint16_t sender_id;
+ uint16_t receiver_id;
+ uint8_t  user_data[];
+}robot_interaction_data_t;//机器人交互数据基本结构体 6+x字节
 
+typedef __packed struct
+{
+uint8_t delete_type;
+uint8_t layer;
+}interaction_layer_delete_t;
+
+typedef __packed struct
+{ 
+uint8_t figure_name[3]; 
+uint32_t operate_tpye:3; 
+uint32_t figure_tpye:3; 
+uint32_t layer:4; 
+uint32_t color:4; 
+uint32_t details_a:9;
+uint32_t details_b:9;
+uint32_t width:10; 
+uint32_t start_x:11; 
+uint32_t start_y:11; 
+uint32_t details_c:10; 
+uint32_t details_d:11; 
+uint32_t details_e:11; 
+}interaction_figure_t;
+
+typedef __packed struct
+{
+ interaction_figure_t interaction_figure[2];
+}interaction_figure_2_t;
+
+typedef __packed struct
+{
+interaction_figure_t interaction_figure[5];
+}interaction_figure_3_t;
+
+typedef __packed struct
+{
+interaction_figure_t interaction_figure[7];
+}interaction_figure_4_t;
 
 extern void init_referee_struct_data(void);
 extern void referee_data_solve(uint8_t *frame);

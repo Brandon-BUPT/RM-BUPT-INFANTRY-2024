@@ -162,7 +162,23 @@ void CAN_cmd_gimbal(int16_t yaw, int16_t pitch, int16_t shoot, int16_t rev)
     gimbal_can_send_data[7] = rev;
     HAL_CAN_AddTxMessage(&GIMBAL_CAN, &gimbal_tx_message, gimbal_can_send_data, &send_mail_box);
 }
-
+void CAN_cmd_yaw(int16_t yaw)
+{
+    uint32_t send_mail_box;
+    gimbal_tx_message.StdId = CAN_GIMBAL_ALL_ID;
+    gimbal_tx_message.IDE = CAN_ID_STD;
+    gimbal_tx_message.RTR = CAN_RTR_DATA;
+    gimbal_tx_message.DLC = 0x08;
+    gimbal_can_send_data[0] = (yaw >> 8);
+    gimbal_can_send_data[1] = yaw;
+    gimbal_can_send_data[2] = 0;
+    gimbal_can_send_data[3] = 0;
+    gimbal_can_send_data[4] = 0;
+    gimbal_can_send_data[5] = 0;
+    gimbal_can_send_data[6] = 0;
+    gimbal_can_send_data[7] = 0;
+    HAL_CAN_AddTxMessage(&CHASSIS_CAN, &gimbal_tx_message, gimbal_can_send_data, &send_mail_box);
+}
 /**
   * @brief          向底盘发送ID为0x700的CAN包,它会设置3508电机进入快速设置ID
   * @param[in]      none

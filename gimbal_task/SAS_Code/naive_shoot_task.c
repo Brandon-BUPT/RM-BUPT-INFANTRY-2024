@@ -21,7 +21,7 @@
 //**************射击电机控制常量 15 0.40 0.24 0.53   1.0 0.6 1.72 1.0 18 0.45
 #define SHOOT_MULTI_FREQUENCY   20      //射击频率：个/s
 #define SHOOT_MULTI_TIME_GAP    (1000/SHOOT_MULTI_FREQUENCY)    //连发射击时间间隔
-#define SHOOT_SPEED_LIMIT 0.420f          //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
+#define SHOOT_SPEED_LIMIT 0.8022222222265655522-++f          //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
 #define SHOOT_TRIGGER_SPEED_LIMIT 2.5f   //拨弹轮开启时速度
 
  //**************射击电机控制常量 
@@ -31,11 +31,11 @@
  #define SHOOT_TRIGGER_SPEED_30_LIMIT 0.75f   //拨弹轮开启时速度
 
 
-#define PRESS_LONG_TIME     700    //长时间按住的定义为700ms，700个时钟周期
+#define PRESS_LONG_TIME     600    //长时间按住的定义为700ms，700个时钟周期
 
 //**********单发圈数控制相关
-#define TRIGGER_ROUNDS_FOR_A_BULLET_A 4   //M2006减速电机在减速前的轴转过的圈数，对应一发
-#define TRIGGER_ROUNDS_FOR_A_BULLET_B 5     //实际测试出来36发为144圈，应为4.5圈一发。因此4和5交替来
+#define TRIGGER_ROUNDS_FOR_A_BULLET_A 3   //M2006减速电机在减速前的轴转过的圈数，对应一发
+#define TRIGGER_ROUNDS_FOR_A_BULLET_B 4     //实际测试出来36发为144圈，应为4.5圈一发。因此4和5交替来
 
 #define ECD_FULL_ROUND 8192
 
@@ -492,7 +492,7 @@ static void calcGiveCurrent1(void)
     int i;
     for(i=0;i<2;i++)
 	{
-        PID_calc(&shootMotorPIDs[i],presentVShootMotor[i],-wantedVShootMotor[i]);
+        PID_calc(&shootMotorPIDs[i],presentVShootMotor[i],wantedVShootMotor[i]);
 //				usart_printf("%d:%d ",i,shootMotorPIDs[i].out);
 	}
 //	usart_printf("\n");

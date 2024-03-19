@@ -97,6 +97,20 @@ typedef struct
 {
 	int a;
 }can_send_data_keyboard_s;
+
+typedef struct
+{
+	int16_t U;
+	int16_t I;
+	int16_t state;
+}can_send_data_superc_s;
+
+typedef struct
+{
+	float U;
+	float I;
+	int error;
+}decode_data_superc_s;
 typedef struct
 {
     uint16_t ecd;
@@ -209,9 +223,11 @@ extern const motor_measure_t *get_trigger_motor_measure_point(void);
 extern const motor_measure_t *get_chassis_motor_measure_point(uint8_t i);
 extern const  can_send_data_s *get_yaw_measure_point();
 extern const  can_send_data_channel_s *get_channel_measure_point();
+extern const  decode_data_superc_s *get_superc_measure_point();
 //extern const can_send_data_nuc_yaw_s *get_nuc_yaw_measure_point();
 extern const can_send_data_s *get_keyboard_measure_point(); 
 extern const can_send_data_trigger_s *get_trigger_measure_point();
 extern void CAN2_send_super_c_control(int16_t a,int16_t b,int16_t c);
 extern void CAN2_send_super_c_buffer(int16_t buffer);
+
 #endif

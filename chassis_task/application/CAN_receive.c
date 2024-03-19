@@ -54,13 +54,20 @@ static can_send_data_s   yaw_data;
 static can_send_data_keyboard_s keyboard_data;
 static can_send_data_channel_s channel_data;
 static can_send_data_nuc_yaw_s nuc_yaw_data;
+static decode_data_superc_s superc_data;
 
 static can_send_data_trigger_s trigger_data;
 static CAN_TxHeaderTypeDef  can1_tx_trigger_message;
 		
 
 
-
+float int16_to_float(int16_t a, int16_t a_max, int16_t a_min, float b_max, 
+float b_min)
+{
+ float b = (float)(a - a_min) / (float)(a_max - a_min) * (b_max - b_min) 
++ b_min;
+ return b;
+}
 
 
 		
@@ -159,7 +166,22 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 					//usart_printf("2\r\n");
           break;
 				}
-
+				case 0x30:
+				{
+					typedef union
+					{
+					can_send_data_superc_s data_s_4;
+					uint8_t data_4[sizeof(can_send_data_superc_s)];
+					}can_send_data_superc_u;
+					can_send_data_superc_u can_send_data_006_u;
+					for(int i = 0; i < sizeof(can_send_data_superc_s); i++)
+					{
+						 can_send_data_006_u.data_4[i] = rx_data[i];
+					}
+					superc_data.U =  int16_to_float(can_send_data_006_u.data_s_4.U,32000,-32000,30.0,0.0);
+					superc_data.I = int16_to_float(can_send_data_006_u.data_s_4.I,32000,-32000,20.0,-20.0);
+					superc_data.error = can_send_data_006_u.data_s_4.state;
+				}
         
         default:
         {
@@ -177,7 +199,10 @@ const  can_send_data_channel_s *get_channel_measure_point()
 {
 	return &channel_data;
 }
-
+const  decode_data_superc_s *get_superc_measure_point()
+{
+	return &superc_data;
+}
 //const can_send_data_nuc_yaw_s *get_nuc_yaw_measure_point()
 //{
 //	return &nuc_yaw_data;
@@ -202,7 +227,7 @@ void CAN2_send_super_c_buffer(int16_t buffer)
 		can2_tx_message_super_c_buffer.DLC=0x08;
 		can2_send_super_c_buffer[0]=buffer>>8;
 		can2_send_super_c_buffer[1]=buffer;	
-	  HAL_CAN_AddTxMessage(&hcan2,&can2_tx_message_super_c_buffer,can2_send_super_c_buffer,&send_mail_box);
+	  HAL_CAN_AddTxMessage(&hcan1,&can2_tx_message_super_c_buffer,can2_send_super_c_buffer,&send_mail_box);
 }
 //给云台转发裁判数据
 static uint8_t can1_send_referee[8];
@@ -247,7 +272,7 @@ void CAN2_send_super_c_control(int16_t a,int16_t b,int16_t c){
 	can2_send_super_c_ctrl[5]=c;
 	can2_send_super_c_ctrl[6]=0x3F;
 	can2_send_super_c_ctrl[7]=0x3f;
-	HAL_CAN_AddTxMessage(&hcan2,&can2_tx_message_super_c_ctrl,can2_send_super_c_ctrl,&send_mail_box);
+	HAL_CAN_AddTxMessage(&hcan1,&can2_tx_message_super_c_ctrl,can2_send_super_c_ctrl,&send_mail_box);
 }
 
 

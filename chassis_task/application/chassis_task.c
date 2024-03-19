@@ -49,7 +49,7 @@
         }                                                           \
     }
 		//**********************************//
-#define YAW_INIT_ECD 2500 //yaw的初始ecd
+#define YAW_INIT_ECD 2522 //yaw的初始ecd
 //*********************************************//
 #define YAW_RC_SEN      -0.000004f
 #define PITCH_RC_SEN    -0.000005f //0.005
@@ -627,12 +627,8 @@ void chassis_task(void const *pvParameters)
 	initGimbalYaw();
 	gimbalYawCtrl.wantedAbsoluteAngle=0.0f;
 	while(1){
-	  //robotMode=getRobotPresentMode();
 		robotMode=RC_channel->mode;
 		  
-		//usart_printf("%d\r\n",robotMode);
-		//usart_printf("%d,%d,%d,%d\r\n",RC_channel->channel_0,RC_channel->channel_1,RC_channel->channel_2,RC_channel->channel_3);
-		
 	  analyseTotalControl();
 		refreshECD();
 		getControlAngles();
@@ -654,11 +650,6 @@ void chassis_task(void const *pvParameters)
 		driveMotor[2].giveCurrent,driveMotor[3].giveCurrent);
 		CAN_cmd_gimbal(gimbal_yaw_ctrl_point->giveVolt,0,0,0);
 		}
-//    fp32 power, buffer;
-//		get_chassis_power_and_buffer(&power, &buffer);
-		//usart_printf("%f, %f\r\n", power, buffer);
-		//usart_printf("%f,%f,%d\r\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle,gimbal_yaw_ctrl_point->giveVolt);
-		//usart_printf("%f,%f,%f,%f,%d,%d\r\n",driveMotor[0].presentMotorSpeed,driveMotor[0].wantedMotorSpeed,power,buffer,gimbalYawCtrl.nowECD,get_robot_chassis_power_limit());
 		osDelay(CHASSIS_CONTROL_TIME_MS);
 		
 	}

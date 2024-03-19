@@ -198,11 +198,11 @@ void MX_FREERTOS_Init(void) {
     osThreadDef(totalModeTask, robot_total_mode_task, osPriorityHigh, 0, 256);
     totalModeTask_handle = osThreadCreate(osThread(totalModeTask), NULL);
 
-//    osThreadDef(shootTask, shoot_task, osPriorityHigh, 0, 512);
-//    shootTaskTask_handle = osThreadCreate(osThread(shootTask), NULL);
+    osThreadDef(shootTask, shoot_task, osPriorityHigh, 0, 512);
+    shootTaskTask_handle = osThreadCreate(osThread(shootTask), NULL);
 
-//    osThreadDef(shootTrgMonitor, shootTaskTrggMonitor, osPriorityRealtime, 0, 128);
-//    shootTaskTrgMntr_handle = osThreadCreate(osThread(shootTrgMonitor), NULL);
+    osThreadDef(shootTrgMonitor, shootTaskTrggMonitor, osPriorityRealtime, 0, 128);
+    shootTaskTrgMntr_handle = osThreadCreate(osThread(shootTrgMonitor), NULL);
 
 
   /* USER CODE END RTOS_THREADS */

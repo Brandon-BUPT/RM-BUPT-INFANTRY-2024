@@ -20,13 +20,15 @@
 
 #include "bsp_usart.h"
 #include "detect_task.h"
+#include <stdlib.h>
 
 #include "CRC8_CRC16.h"
 #include "fifo.h"
 #include "protocol.h"
 #include "referee.h"
 
-
+#include "ui_interface.h"
+#include "ui_types.h"
 
 
 /**
@@ -35,13 +37,19 @@
   * @retval         none
   */
 /**
-  * @brief          ���ֽڽ��
+  * @brief          
   * @param[in]      void
   * @retval         none
   */
 static void referee_unpack_fifo_data(void);
 
- 
+static void referee_ui(void);
+
+static void referee_ui_init(void);
+
+static void referee_ui_refresh(void);
+
+static void referee_ui_transmit(void);
 extern UART_HandleTypeDef huart6;
 
 uint8_t usart6_buf[2][USART_RX_BUF_LENGHT];
@@ -66,17 +74,17 @@ void referee_usart_task(void const * argument)
     fifo_s_init(&referee_fifo, referee_fifo_buf, REFEREE_FIFO_BUF_LENGTH);
     usart6_init(usart6_buf[0], usart6_buf[1], USART_RX_BUF_LENGHT);
 
-  			fp32 power = 0.0f;
-				fp32 buffer = 0.0f;
+		int count = 0;
     while(1)
     {
-
+			if(count%10==0)
         referee_unpack_fifo_data();
-//        get_chassis_power_and_buffer(&power, &buffer);
-//			  usart_printf("%f, %f\r\n", power, buffer);
-//  			usart_printf("111\r\n");
-  
-        osDelay(10);
+			if(count%100 == 0)	
+				referee_ui();
+			
+			
+			count++;
+      osDelay(1);
     }
 }
 
@@ -188,6 +196,89 @@ void referee_unpack_fifo_data(void)
   }
 }
 
+//主要发送逻辑
+static void referee_ui(void)
+{
+	referee_ui_init();
+	referee_ui_transmit();
+}
+/*
+	代码思路：
+		先把需要的结构体打包好
+		0 - 5
+		1 - 2
+		2 - 5
+		3 - 2
+		4 - 2
+		5 - 7
+	*/
+ui_5_frame_t layer0;//射击线
+ui_2_frame_t layer1;//车道线
+ui_5_frame_t layer2;//字符串
+ui_2_frame_t layer3;//动态圆形
+ui_2_frame_t layer4;//动态圆形加条
+ui_7_frame_t layer5;//射击线2
+//增加静态图层
+void ui_draw_lineandrect(ui_interface_figure_t *line,const char figure_name[3], int operate_tpyel, int layer, int color,
+                  int start_x, int start_y, int width, int end_x, int end_y) 
+{
+	line->figure_name[0] = figure_name[0];
+	line->figure_name[1] = figure_name[1];
+	line->figure_name[2] = figure_name[2];
+	line->operate_tpyel = operate_tpyel;
+	line->figure_tpye = 0 ;
+	line->layer = layer;
+	line->color = color;
+	line->start_x = start_x;
+	line->start_y = start_y;
+	line->width = width;
+	line->_a = 0;
+	line->_b = 0;
+	line->_c = 0;
+	line->_d = end_x;
+	line->_e = end_y;
+}
+
+
+static void referee_ui_init(){
+	//layer0
+	layer0.data[0].figure_name[0] = 'a';
+	layer0.data[0].figure_name[1] = 'a';
+	layer0.data[0].figure_name[2] = 'a';
+	layer0.data[0].operate_tpyel = 1;
+	layer0.data[0].figure_tpye  = 0;
+	layer0.data[0].layer = 0;
+	layer0.data[0].color = 2;
+	layer0.data[0].start_x = 672;
+	layer0.data[0].start_y = 538;
+	layer0.data[0].width = 1;
+	layer0.data[0]._a = 0;
+	layer0.data[0]._b = 0;
+	layer0.data[0]._c = 0;
+	layer0.data[0]._d = 1255;
+	layer0.data[0]._e = 538;
+	
+	ui_draw_lineandrect(&layer0.data[1],"bbb",1,0,2,1920/2,119,1,1920/2,539);
+	ui_draw_lineandrect(&layer0.data[2],"ccc",1,0,3,737,344,3,737+454,344+454);
+	ui_draw_lineandrect(&layer0.data[3],"ddd",1,0,2,743,480,1,1181,480);
+	ui_draw_lineandrect(&layer0.data[4],"eee",1,0,2,882,441,1,1033,441);
+	
+	//layer1
+}
+//刷新动态图层
+
+//填充打包发送
+char buffer[200];
+static void referee_ui_transmit(){
+	ui_proc_5_frame(&layer0);
+	memcpy(buffer, &layer0, sizeof(ui_5_frame_t));
+	usart6_tx_dma_enable((uint8_t *)buffer,sizeof(layer0));
+//	ui_proc_2_frame(&layer1);
+//	ui_proc_5_frame(&layer2);
+//	ui_proc_2_frame(&layer3);
+//	ui_proc_2_frame(&layer4);
+//	ui_proc_7_frame(&layer5);
+}
 
 void USART6_IRQHandler(void)
 {

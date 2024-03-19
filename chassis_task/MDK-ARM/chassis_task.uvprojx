@@ -743,6 +743,21 @@
               <FileType>1</FileType>
               <FilePath>..\application\super_c_task.c</FilePath>
             </File>
+            <File>
+              <FileName>ui_interface.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\application\ui_interface.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_types.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\application\ui_types.h</FilePath>
+            </File>
+            <File>
+              <FileName>ui_interface.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\application\ui_interface.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

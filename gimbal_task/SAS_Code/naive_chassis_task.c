@@ -121,7 +121,7 @@
                                                 //并非真实旋转速度,需要先乘以一个系数。
 
 //***************************PID控制参数*****************//
-#define MAX_MOTOR_CAN_CURRENT 15000.0f  //底盘3508最大can发送电流值
+#define MAX_MOTOR_CAN_CURRENT 30000.0f  //底盘3508最大can发送电流值
 //底盘电机速度环PID
 #define M3505_MOTOR_SPEED_PID_KP 16000.0f
 #define M3505_MOTOR_SPEED_PID_KI 10.0f

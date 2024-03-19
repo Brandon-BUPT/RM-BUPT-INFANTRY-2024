@@ -193,3 +193,5 @@ void get_shoot_heat1_limit_and_heat1(uint16_t *heat1_limit, uint16_t *heat1)
     *heat1 = power_heat_data_t.shooter_heat1;
 }
 
+/**************»æÖÆUI***************/
+

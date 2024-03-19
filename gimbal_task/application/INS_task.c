@@ -95,8 +95,8 @@ void INS_Task(void)
 
         // 获取最终数据
         INS.Yaw = QEKF_INS.Yaw/360*2*PI;
-        INS.Pitch = QEKF_INS.Roll/360*2*PI;
-        INS.Roll = QEKF_INS.Pitch/360*2*PI;
+        INS.Pitch = QEKF_INS.Pitch/360*2*PI;
+        INS.Roll = QEKF_INS.Roll/360*2*PI;
         INS.YawTotalAngle = QEKF_INS.YawTotalAngle/360*2*PI;
     }
 
