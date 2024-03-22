@@ -73,7 +73,7 @@
 
 //chassis task control time  2ms
 //底盘任务控制间隔 2ms
-#define CHASSIS_CONTROL_TIME_MS 10
+#define CHASSIS_CONTROL_TIME_MS 2
 
 //chassis task control time 0.002s
 //底盘任务控制间隔 0.002s
@@ -121,9 +121,9 @@
 //底盘电机速度环PID
 //底盘3508最大can发送电流值
 #define MAX_MOTOR_CAN_CURRENT 25000.0f
-#define M3505_MOTOR_SPEED_PID_KP 40000.0f
+#define M3505_MOTOR_SPEED_PID_KP 41000.0f
 #define M3505_MOTOR_SPEED_PID_KI 0.0f
-#define M3505_MOTOR_SPEED_PID_KD 0.0f // 1500
+#define M3505_MOTOR_SPEED_PID_KD 1500.0f // 1500
 #define M3505_MOTOR_SPEED_PID_MAX_OUT MAX_MOTOR_CAN_CURRENT
 #define M3505_MOTOR_SPEED_PID_MAX_IOUT 2000.0f
 

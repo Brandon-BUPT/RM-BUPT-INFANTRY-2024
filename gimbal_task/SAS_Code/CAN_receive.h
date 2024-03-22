@@ -35,7 +35,7 @@ typedef enum
 // 电机数据结构体。
 typedef struct {
 	int16_t shootspeed;
-	uint8_t robot_color;
+	uint8_t robot_id;
 }can_send_referee_s;
 typedef struct
 {

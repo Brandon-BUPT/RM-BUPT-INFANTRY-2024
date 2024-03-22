@@ -45,23 +45,12 @@ typedef enum
 enum RobotState_e{
     RobotState_e_Powerless=0,     //����ģʽ��ң��������ʱ����
 
-    RobotState_e_CommonCar=3,     //��ͨ��ģʽ�����̿��Ƶ�������ϵ�˶���edsfag�ֱ��Ӧǰ��ƽ�ơ�������ת������ƽ�ơ�
-                                //��������̨������ת��
-                                // ��ʱ��ң�������ҡ�˿��Ƶ����ڵ�������ϵǰ��ƽ�ơ�������ת���Ҳ���ȷ����̨��������ת
-                                // ���˳���ʱ���룬�Լ���cʱ����
-                                // auto NUC������̨�����ķ���
+    RobotState_e_CommonCar=3,     
 
-    RobotState_e_GimbalCar=1,        //��̨��ģʽ��������yaw���ܿ�ס�������ģʽʱ���᳢�Ի�����̨��һ��ʱ���ڻ������˾ͷ���
-                                //wsadǰ������ƽ�ƣ����pitch���º�������ת
-                                // ��ʱ��ң�������ҡ�˿��ƻ���������̨����ϵ��ǰ������ƽ�ƣ�
-                                //��������ʱ���룬�Լ���bʱ����
-                                // auto NUC������̨pitch������ת�򣺽Ƕ�PID���ƻ�õĽ��ٶȳ���ϵ���󽻸����̿�������
+    RobotState_e_GimbalCar=1,        
                                 
 
-    RobotState_e_Spinner=2,       //С����ģʽ����̨���ݻ�е�ṹ�Զ�ȷ����С���ݻ���׼С���ݡ�
-                                //��������ʱ���룬�Լ���vʱ����
-                                //ң������ҡ�˿�������̨����ϵ�µ�ǰ������ƽ�ƣ���ҡ�˿�����̨��ת
-                                // auto NUC������̨��������
+    RobotState_e_Spinner=2,     
 };
 typedef struct
 {
@@ -81,9 +70,10 @@ typedef struct
 	bool_t A;
 	bool_t S;
 	bool_t D;
-	bool_t E;
-	bool_t F;
-	bool_t G;
+	bool_t fric_on;
+	bool_t servo_state;
+	bool_t robot_auto;
+	bool_t spin;
 }can_send_data_channel_s;
 
 typedef struct

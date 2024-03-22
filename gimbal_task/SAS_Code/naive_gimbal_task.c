@@ -115,16 +115,16 @@
 #define PITCH_SPD_KP 10000000.0f
 // #define PITCH_SPD_KP 10000000.0f
 
-#define PITCH_SPD_KI 100.0f
-#define PITCH_SPD_KD 100.0f
+#define PITCH_SPD_KI 0.0f
+#define PITCH_SPD_KD 0.0f
                             
 #define PITCH_VOLT_MAX_OUT  30000.0f    // prev ent overflow of control control volt
                                         // because the control volt is -30000~30000
 #define PITCH_VOLT_MAX_IOUT 3000.0f
 
 //输入角度 rad ，输出角速度rad/s 的PID系数
-#define PITCH_AGL_KP 0.05f
-#define PITCH_AGL_KI 0.0001f
+#define PITCH_AGL_KP 0.03f
+#define PITCH_AGL_KI 0.00f
 #define PITCH_AGL_KD 0.00f
 
 #define PITCH_AGL_SPD_MAX_OUT (2.0f)
@@ -132,17 +132,17 @@
 
 
 //yawPID锟剿诧拷
-#define YAW_SPD_KP 1300000.0f
-#define YAW_SPD_KI 1000.0f
-#define YAW_SPD_KD 100.0f
+#define YAW_SPD_KP 17000000.0f
+#define YAW_SPD_KI 0.0f
+#define YAW_SPD_KD 1000000.0f
 
 #define YAW_VOLT_MAX_OUT  30000.0f
-#define YAW_VOLT_MAX_IOUT 3000.0f
+#define YAW_VOLT_MAX_IOUT 10000.0f
 
 // #define YAW_AGL_KP 0.07f
-#define YAW_AGL_KP 0.05f
+#define YAW_AGL_KP 0.03f
 #define YAW_AGL_KI 0.00f
-#define YAW_AGL_KD 0.00f
+#define YAW_AGL_KD 0.002f
 
 #define YAW_AGL_SPD_MAX_OUT (50.0f)
 #define YAW_AGL_SPD_MAX_IOUT (11.7f)
@@ -411,7 +411,9 @@ fp32 gimbal_PID_calc(pid_type_def *pid, fp32 ref, fp32 set)
     pid->set = set;
     pid->fdb = ref;
     pid->error[0] = radFormat(set - ref);
-    if (pid->mode == PID_POSITION)
+		if(fabs(pid->error[0])<0.003)
+			pid->error[0]=0;
+    if(pid->mode == PID_POSITION)
     {
         pid->Pout = pid->Kp * pid->error[0];
 			if(toe_is_error(DBUS_TOE))
@@ -453,8 +455,15 @@ void refreshAngleStates(struct gimbalMotorCtrl_s * c)
     c->nowAbsoluteAngle=*(c->anglePoint);
     c->nowTime=xTaskGetTickCount();
 
-    c->radSpeed=(c->nowAbsoluteAngle-c->lastAbsoluteAngle)/(c->nowTime-c->lastTime);
-    
+    float angleDifference = c->nowAbsoluteAngle - c->lastAbsoluteAngle;
+
+		if (angleDifference > PI) {
+				angleDifference -= 2 * PI; // 超过π，减去2π，保持在-π到π之间
+		} else if (angleDifference < -PI) {
+				angleDifference += 2 * PI; // 小于-π，加上2π，保持在-π到π之间
+		}
+
+		c->radSpeed = angleDifference / (c->nowTime - c->lastTime);
     //当前ECD角度
     c->nowECD=*(c->ECDPoint);
 }
@@ -617,34 +626,67 @@ void limitAnglesSecond(void)
         gimbalPitchCtrl.wantedAbsoluteAngle=PITCH_TEST_RAD_MIN;
     
 }
-
+int count =0;
 void calcPID(void)
 {
-    uint8_t i;
-    struct gimbalMotorCtrl_s * c;
-    for(i=0;i<2;i++)
-    {
-        c=gimbalCtrl[i];
-        gimbal_PID_calc(&(c->agl_pid),c->nowAbsoluteAngle,c->wantedAbsoluteAngle);  // 关乎旋转方向的PID控制器
+								if(count>500&&count<1000)
+				{
+						gimbalYawCtrl.wantedAbsoluteAngle = PI/4;
+				}
+				if(count<500&&count>0)
+				{
+					gimbalYawCtrl.wantedAbsoluteAngle = -PI/4;
+				}
+				if(count == 1000)
+					count = 0;
+        gimbal_PID_calc(&(gimbalYawCtrl.agl_pid),gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle);  // 关乎旋转方向的PID控制器
         // 输出了所需旋转速度。
 
         //对速度进行一阶滤波
         #ifdef GIMBAL_FILTER_ON
-        first_order_filter_cali(&(c->spd_filter),(c->agl_pid).out);
-
+        first_order_filter_cali(&(gimbalYawCtrl.spd_filter),(gimbalYawCtrl.agl_pid).out);
+				
         #endif
-
-        PID_calc(&(c->spd_pid),c->radSpeed,(c->spd_filter).out);   // 普通的速度控制环
-        c->giveVolt=c->spd_pid.out;     //给电压
-				//usart_printf("%d\r\n",c->giveVolt);
-        if(c->zeroVoltMark)
+				
+//				if(count>500&&count<1000)
+//				{
+//						gimbalYawCtrl.spd_filter.out = 0.005;
+//				}
+//				if(count<500&&count>0)
+//				{
+//					gimbalYawCtrl.spd_filter.out = -0.005;
+//				}
+//				if(count == 1000)
+//					count = 0;
+//				++count;
+				
+				
+        PID_calc(&(gimbalYawCtrl.spd_pid),gimbalYawCtrl.radSpeed,gimbalYawCtrl.spd_filter.out);   // 普通的速度控制环
+        gimbalYawCtrl.giveVolt=gimbalYawCtrl.spd_pid.out;     //给电压
+				if(gimbalYawCtrl.zeroVoltMark)
         {
-            c->giveVolt=0;
+           gimbalYawCtrl.giveVolt=0;
         }
-    }
-    // 特殊情况：bad yaw时，输出角速度给底盘电机
-    if(*robotMode==RobotState_e_BadYawCar)
-        toChassis.w=gimbalYawCtrl.agl_pid.out;
+				
+				
+	      gimbal_PID_calc(&(gimbalPitchCtrl.agl_pid),gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle);  // 关乎旋转方向的PID控制器
+        // 输出了所需旋转速度。
+
+        //对速度进行一阶滤波
+        #ifdef GIMBAL_FILTER_ON
+        first_order_filter_cali(&(gimbalPitchCtrl.spd_filter),(gimbalPitchCtrl.agl_pid).out);
+				
+        #endif
+				
+        PID_calc(&(gimbalPitchCtrl.spd_pid),gimbalPitchCtrl.radSpeed,gimbalPitchCtrl.spd_filter.out);   // 普通的速度控制环
+        gimbalPitchCtrl.giveVolt=gimbalPitchCtrl.spd_pid.out;     //给电压
+
+				//usart_printf("%d\r\n",c->giveVolt);
+        if(gimbalPitchCtrl.zeroVoltMark)
+        {
+           gimbalPitchCtrl.giveVolt=0;
+        }
+				
 }
 
 int16_t * getTriggerCurrentP(void); //从另一个文件获取拨弹轮电机的电流
@@ -668,6 +710,7 @@ void gimbal_task(void const *pvParameters)
 		gimbalPitchCtrl.zeroVoltMark=0;
 		gimbalYawCtrl.wantedAbsoluteAngle = gimbalYawCtrl.nowAbsoluteAngle;
 		gimbalPitchCtrl.wantedAbsoluteAngle = gimbalPitchCtrl.nowAbsoluteAngle;
+
     while(1)
     {
 			  laser_on();
@@ -679,11 +722,14 @@ void gimbal_task(void const *pvParameters)
             monitorRounds(gimbalCtrl[i]);        // 监控转过的圈数           //test
         }
 				limitAnglesSecond();
-        calcPID();              // 总是控制角度，双环，但测试时需要
+//				gimbalPitchCtrl.wantedAbsoluteAngle = 0.0f;
+        calcPID();              
         CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
 				CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
-				
-//				ylYawCtrl.nowECD);
+				CAN1_send_yaw();
+				CAN1_send_channel();  
+						//		usart_printf("%f,%f,%f,%f\r\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle,gimbalPitchCtrl.radSpeed,gimbalPitchCtrl.spd_filter.out);
+//				usart_printf("%f,%f,%f,%f,%d\r\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle,gimbalYawCtrl.radSpeed,gimbalYawCtrl.spd_filter.out,gimbalYawCtrl.giveVolt);
 				osDelay(GIMBAL_TASK_CTRL_TIME);
 				
 
@@ -706,11 +752,5 @@ const int16_t * getGimbalNowRoundsPoint(void)
 //to do :
 // 角速度能力测试
 // 
-
-void OLED_gimbal(void)
-{
-    // OLED_printf(4,0,"WantP:%.2f,wantY%.2f",gimbalPitchCtrl.wantedAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle);
-    OLED_printf(0,0,"pitch ECD:%d,pitch rad:%f",gimbalCtrl[0]->nowECD,gimbalCtrl[0]->nowAbsoluteAngle);
-}
 
 

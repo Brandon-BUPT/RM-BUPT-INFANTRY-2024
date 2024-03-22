@@ -21,21 +21,11 @@
 #include "bsp_servo_pwm.h"
 #include "remote_control.h"
 
-#define SERVO_MIN_PWM   1350
-#define SERVO_MAX_PWM   3150
+#define SERVO_MIN_PWM   1000
+#define SERVO_MAX_PWM   1850
 
-#define PWM_DETAL_VALUE 300
-
-#define SERVO1_ADD_PWM_KEY  KEY_PRESSED_OFFSET_Z
-#define SERVO2_ADD_PWM_KEY  KEY_PRESSED_OFFSET_X
-#define SERVO3_ADD_PWM_KEY  KEY_PRESSED_OFFSET_C
-#define SERVO4_ADD_PWM_KEY  KEY_PRESSED_OFFSET_V
-
-#define SERVO_MINUS_PWM_KEY KEY_PRESSED_OFFSET_CTRL
-
-const RC_ctrl_t *servo_rc;
-const static uint16_t servo_key[4] = {SERVO1_ADD_PWM_KEY, SERVO2_ADD_PWM_KEY, SERVO3_ADD_PWM_KEY, SERVO4_ADD_PWM_KEY};
-uint16_t servo_pwm[4] = {SERVO_MIN_PWM, SERVO_MIN_PWM, SERVO_MIN_PWM, SERVO_MIN_PWM};
+servo_t servo;
+const RC_ctrl_t* servo_rc;
 /**
   * @brief          servo_task
   * @param[in]      pvParameters: NULL
@@ -46,39 +36,43 @@ uint16_t servo_pwm[4] = {SERVO_MIN_PWM, SERVO_MIN_PWM, SERVO_MIN_PWM, SERVO_MIN_
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
+void servo_init(void)
+{
+	HAL_TIM_Base_Start(&htim1);
+	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
+	servo.id = 0;
+	servo.htim = htim1;
+	servo.channel = TIM_CHANNEL_1;
+}
+
+bool_t servo_open = 1;
 void servo_task(void const * argument)
 {
     servo_rc = get_remote_control_point();
-
+		servo_init();
     while(1)
     {
-        for(uint8_t i = 0; i < 4; i++)
-        {
-
-            if( (servo_rc->key.v & SERVO_MINUS_PWM_KEY) && (servo_rc->key.v & servo_key[i]))
-            {
-                servo_pwm[i] -= PWM_DETAL_VALUE;
-            }
-            else if(servo_rc->key.v & servo_key[i]||servo_rc->rc.ch[4]<-500)
-            {
-                servo_pwm[i] += PWM_DETAL_VALUE;
-            }
-
-            //limit the pwm
-           //限制pwm
-            if(servo_pwm[i] < SERVO_MIN_PWM)
-            {
-                servo_pwm[i] = SERVO_MIN_PWM;
-            }
-            if(servo_pwm[i] > SERVO_MAX_PWM)
-            {
-                servo_pwm[i] = SERVO_MAX_PWM;
-            }
-
-            servo_pwm_set(servo_pwm[i], i);
-        }
-        osDelay(10);
+			//打开
+				if(servo_rc->key.v & KEY_PRESSED_OFFSET_Z)
+				{
+					servo_open = 1;
+					single_servo_ctrl(&servo,SERVO_MIN_PWM);
+					osDelay(500);
+				}
+			//关上
+        if(servo_rc->key.v & KEY_PRESSED_OFFSET_X)
+				{
+					servo_open = 0;
+					single_servo_ctrl(&servo,SERVO_MAX_PWM);
+					osDelay(500);
+				}
+        osDelay(20);
     }
+}
+
+bool_t  get_servo_state(void)
+{
+		return servo_open;
 }
 
 

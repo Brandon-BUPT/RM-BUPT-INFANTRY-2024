@@ -17,6 +17,7 @@
 
 #include "pid.h"
 #include "main.h"
+#include <math.h>
 
 #define LimitMax(input, max)   \
     {                          \
@@ -92,6 +93,8 @@ fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set)
     pid->set = set;
     pid->fdb = ref;
     pid->error[0] = set - ref;
+		if(fabs(pid->error[0])<0.00001)
+			pid->error[0]=0;
     if (pid->mode == PID_POSITION)
     {
         pid->Pout = pid->Kp * pid->error[0];

@@ -19,10 +19,11 @@
 
 
 //**************射击电机控制常量 15 0.40 0.24 0.53   1.0 0.6 1.72 1.0 18 0.45
-#define SHOOT_MULTI_FREQUENCY   20      //射击频率：个/s
+#define SHOOT_MULTI_FREQUENCY   4      //射击频率：个/s
 #define SHOOT_MULTI_TIME_GAP    (1000/SHOOT_MULTI_FREQUENCY)    //连发射击时间间隔
-#define SHOOT_SPEED_LIMIT 0.8022222222265655522-++f          //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
+#define SHOOT_SPEED_LIMIT 0.65        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
 #define SHOOT_TRIGGER_SPEED_LIMIT 2.5f   //拨弹轮开启时速度
+#define READY_TRIGGER_SPEED 0.625f
 
  //**************射击电机控制常量 
  #define SHOOT_MULTI_30_FREQUENCY   6       //射击频率：个/s
@@ -34,9 +35,9 @@
 #define PRESS_LONG_TIME     600    //长时间按住的定义为700ms，700个时钟周期
 
 //**********单发圈数控制相关
-#define TRIGGER_ROUNDS_FOR_A_BULLET_A 3   //M2006减速电机在减速前的轴转过的圈数，对应一发
+#define TRIGGER_ROUNDS_FOR_A_BULLET_A 4   //M2006减速电机在减速前的轴转过的圈数，对应一发
 #define TRIGGER_ROUNDS_FOR_A_BULLET_B 4     //实际测试出来36发为144圈，应为4.5圈一发。因此4和5交替来
-
+#define TRIGGER_ROUNDS_FOR_A_BULLET_C 5
 #define ECD_FULL_ROUND 8192
 
 //************遥控器和键鼠设置
@@ -51,14 +52,14 @@
 #define M3505_MOTOR_SPEED_PID_KI 0.0f
 #define M3505_MOTOR_SPEED_PID_KD 0.0f
 //老拨弹盘 20000
-#define M2006_MOTOR_SPEED_PID_KP 20000.0f
+#define M2006_MOTOR_SPEED_PID_KP 80000.0f
 
 #define M2006_MOTOR_SPEED_PID_KI 0.0f   //不要这个积分项，否则连续发射停止后还会转
 #define M2006_MOTOR_SPEED_PID_KD 0.0f
 
-#define MAX_MOTOR_CAN_CURRENT 30000.0f
-#define M3505_MOTOR_SPEED_PID_MAX_OUT MAX_MOTOR_CAN_CURRENT
-#define M3505_MOTOR_SPEED_PID_MAX_IOUT 2000.0f
+#define MAX_MOTOR_SHOOT_CAN_CURRENT 30000.0f
+#define M3505_MOTOR_SHOOT_SPEED_PID_MAX_OUT MAX_MOTOR_SHOOT_CAN_CURRENT
+#define M3505_MOTOR_SHOOT_SPEED_PID_MAX_IOUT 2000.0f
 //70000
 #define MAX_MOTOR_CAN_CURRENT_M2006 70000.0f
 #define M2006_MOTOR_SPEED_PID_MAX_OUT MAX_MOTOR_CAN_CURRENT_M2006
@@ -73,7 +74,7 @@
 #define MILESTONE_NUMBER 3
 
 //**********************卡弹相关***********************//
-#define STUCK_TIME_LIMIT 1000   //当在发射一发的模式中持续一段时间不退出后，进入卡弹解决模式
+#define STUCK_TIME_LIMIT 1500   //当在发射一发的模式中持续一段时间不退出后，进入卡弹解决模式
 #define SOLVING_TIME_LIMIT 500  //在尝试卡弹解决模式中停留的时间。
 
 
@@ -113,7 +114,7 @@ struct InstructBuff_s{
 
 //*******************全局变量********//
 // 摩擦轮开启
-uint8_t fricOn=0;
+bool_t fricOn=0;
 
 // 拨弹轮开启
 uint8_t triggerOn=0;
@@ -150,7 +151,7 @@ static void initShootPIDs(void)
 {
     uint8_t i;
     for(i=0;i<2;i++)
-        PID_init(&shootMotorPIDs[i],PID_POSITION,motor_speed_pid,M3505_MOTOR_SPEED_PID_MAX_OUT,M3505_MOTOR_SPEED_PID_MAX_IOUT);
+        PID_init(&shootMotorPIDs[i],PID_POSITION,motor_speed_pid,M3505_MOTOR_SHOOT_SPEED_PID_MAX_OUT,M3505_MOTOR_SHOOT_SPEED_PID_MAX_IOUT);
     PID_init(&triggerMotorPID,PID_POSITION,trigger_motor_speed_pid,M2006_MOTOR_SPEED_PID_MAX_OUT,M2006_MOTOR_SPEED_PID_MAX_IOUT);
 }
 
@@ -184,11 +185,8 @@ static void getInstructionAndBuff(void)
 
     if(robotIsAuto())
     {
-        #ifdef TEAMER_ALLOW_SHOOT
-        if(nuc_p->nucSayWeShouldShootNow && rc_p->mouse.press_r)    // 按下右键，操作手允许NUC控制发射。
-        #else                                     
+
         if(nuc_p->is_fire||(nuc_p->confidence.data>0.85))
-        #endif
             insBuff.shootOne=1;
     }
             
@@ -422,16 +420,18 @@ static void triggerModeChange(void)
     else if(triggerMode==TriggerMode_e_ShootOne)
     {
         static uint8_t nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_A;
-        //让拨弹轮转动，当逆时针转到4圈时（这是由于机械结构的原因），清除圈数进入stop
         if(triggerCtrl.nowRounds<=(-nowTimeRoundThreshold)||triggerCtrl.nowRounds>=nowTimeRoundThreshold)
         {
             triggerMode=TriggerMode_e_Stop;
             triggerCtrl.nowRounds=0;
             if(nowTimeRoundThreshold==TRIGGER_ROUNDS_FOR_A_BULLET_A)
                 nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_B;
-            else
-                nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_A;
-        }else if(nowTime - shootOneEnterTime > STUCK_TIME_LIMIT)
+            if(nowTimeRoundThreshold==TRIGGER_ROUNDS_FOR_A_BULLET_B)
+                nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_C;
+						if(nowTimeRoundThreshold==TRIGGER_ROUNDS_FOR_A_BULLET_C)
+								nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_A;
+        }
+				else if(nowTime - shootOneEnterTime > STUCK_TIME_LIMIT)
         {
             triggerMode=TriggerMode_e_Stop;   // 到达了卡弹的临界
             solveStuckEnterTime = nowTime;
@@ -453,7 +453,7 @@ static void triggerModeChange(void)
     {
         if((nowTime - solveStuckEnterTime)>=SOLVING_TIME_LIMIT)
         {
-            triggerMode=TriggerMode_e_Stop;
+            triggerMode=TriggerMode_e_ShootOne;
         }
     }
 
@@ -482,9 +482,9 @@ static void setSpeedByMode(void)
         reverse = 1;
 
     if(triggerOn)
-        wantedVTriggerMotor=-reverse?(SHOOT_TRIGGER_SPEED_LIMIT/4):(-SHOOT_TRIGGER_SPEED_LIMIT/4);//若正在解决stuck(reverse)，则以逆向v/4的速度转动
-    else
-        wantedVTriggerMotor=0;
+        wantedVTriggerMotor=reverse?(SHOOT_TRIGGER_SPEED_LIMIT/4):(-SHOOT_TRIGGER_SPEED_LIMIT/4);//若正在解决stuck(reverse)，则以逆向v/4的速度转动
+		else
+				wantedVTriggerMotor=0;
 }
 
 static void calcGiveCurrent1(void)
@@ -498,7 +498,7 @@ static void calcGiveCurrent1(void)
 //	usart_printf("\n");
     for(i=0;i<2;i++)
         giveShootCurrent[i]=shootMotorPIDs[i].out;
-    PID_calc(&triggerMotorPID,presentVTriggerMotor,wantedVTriggerMotor);
+    PID_calc(&triggerMotorPID,presentVTriggerMotor,-wantedVTriggerMotor);
     giveTriggerCurrent=triggerMotorPID.out;
 }
 
@@ -548,7 +548,7 @@ void shoot_task(void const *pvParameters)
         else
             CAN_cmd_shoot(giveShootCurrent[0], giveShootCurrent[1]);
         
-        //usart_printf("%f,%f,%f,%f,%d,%d\r\n",presentVShootMotor[0],presentVShootMotor[1],-wantedVShootMotor[0],-wantedVShootMotor[1],giveShootCurrent[0], giveShootCurrent[1]);
+//        usart_printf("%f,%f,%f,%f,%d,%d\r\n",presentVShootMotor[0],presentVShootMotor[1],-wantedVShootMotor[0],-wantedVShootMotor[1],giveShootCurrent[0], giveShootCurrent[1]);
         osDelay(SHOOT_CTRL_TIME);
     }
 }
@@ -556,6 +556,11 @@ void shoot_task(void const *pvParameters)
 int16_t * getTriggerCurrentP(void)
 {
     return &giveTriggerCurrent;
+}
+
+bool_t get_fric(void)
+{
+	return fricOn;
 }
 
 //为了减小延迟使用的trigger monitor，独立于shoot任务进行

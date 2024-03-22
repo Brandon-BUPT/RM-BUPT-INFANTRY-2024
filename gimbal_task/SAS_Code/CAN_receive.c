@@ -10,6 +10,7 @@
 #include "nucCommu.h"
 #include "user_lib.h"
 #include "pid.h"
+#include "servo_task.h"
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 struct milestoneStack_s {
@@ -127,7 +128,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 							data_0.data_uint8_referee[i]=rx_data[i];
 						}
 						gimbal_rx_referee.shootspeed=data_0.data_s.shootspeed;
-						gimbal_rx_referee.robot_color=data_0.data_s.robot_color;
+						gimbal_rx_referee.robot_id=data_0.data_s.robot_id;
 						break;
 				}
         default:
@@ -270,12 +271,14 @@ void CAN1_send_channel()
 		data_u.data.keyboard = (data_u.data.keyboard | 32);
 	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_D)
 		data_u.data.keyboard = (data_u.data.keyboard | 16);
-	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_E)
+	if(get_fric())	//摩擦轮
 		data_u.data.keyboard = (data_u.data.keyboard | 8);
-	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_F)
+	if(get_servo_state())
 		data_u.data.keyboard = (data_u.data.keyboard | 4);
-	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_G)
+	if(robotIsAuto())//修改成是否开启自瞄
 		data_u.data.keyboard = (data_u.data.keyboard | 2);
+	if(*getRobotPresentMode()==RobotState_e_Spinner)
+		data_u.data.keyboard = (data_u.data.keyboard | 1);
 	for(int i = 0; i <sizeof(can_send_encode_data_s); i++)
 	{
 		can1_send_data_channel[i] = data_u.data_1[i];

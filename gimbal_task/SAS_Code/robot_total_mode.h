@@ -16,7 +16,7 @@
 
 #ifndef ROBOT_TOTAL_MODE_H
 #define ROBOT_TOTAL_MODE_H
-
+#include "struct_typedef.h"
 //version 0.2
 //shift 开启摩擦轮，ctrl关闭摩擦轮
 // 鼠标左键按一下发射一个，按住连发，右键按住允许nuc控制发射（nuc可以选择单发或者连发）
@@ -51,7 +51,7 @@ enum RobotState_e{
 extern int robotIsAuto(void);  // 对外提供的接口，返回目前机器人是否自动
 const enum RobotState_e * getRobotPresentMode(void);  //返回机器人当前状态指针
 void robot_total_mode_task(void const *pvParameters);
-
+bool_t get_fric(void);
 #endif // !ROBOT_TOTAL_MODE_H
 
 /*

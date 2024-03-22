@@ -126,9 +126,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 					channel_data.A = ((yaw_encode_data.keyboard & 64) == 64);
 					channel_data.S = ((yaw_encode_data.keyboard & 32) == 32);
 					channel_data.D = ((yaw_encode_data.keyboard & 16) == 16);
-					channel_data.E = ((yaw_encode_data.keyboard & 8) == 8);
-					channel_data.F = ((yaw_encode_data.keyboard & 4) == 4);
-					channel_data.G = ((yaw_encode_data.keyboard & 2)==  2);
+					channel_data.fric_on = ((yaw_encode_data.keyboard & 8) == 8);
+					channel_data.servo_state = ((yaw_encode_data.keyboard & 4) == 4);
+					channel_data.robot_auto = ((yaw_encode_data.keyboard & 2)==  2);
+					channel_data.spin = ((yaw_encode_data.keyboard & 1)==  1);
 					break;
 				}
 				case 0x002:
@@ -234,7 +235,7 @@ static uint8_t can1_send_referee[8];
 CAN_TxHeaderTypeDef can1_tx_message_referee;
 typedef struct {
 	int16_t shootspeed;
-	uint8_t robot_color;
+	uint8_t robot_id;
 }can_send_referee_s;
 void CAN1_send_referee(int16_t shootspeed,uint8_t robot_color){
 	uint32_t send_mail_box;
@@ -244,7 +245,7 @@ void CAN1_send_referee(int16_t shootspeed,uint8_t robot_color){
 	}can_send_referee_u;
 	can_send_referee_u data_u;
 	data_u.data_s_refree.shootspeed=get_shoot_speed();
-	data_u.data_s_refree.robot_color=get_robot_id()>100?1:0;
+	data_u.data_s_refree.robot_id=get_robot_id();
 	for(int i=0;i<sizeof(can_send_referee_u);i++){
 	can1_send_referee[i]=data_u.data[i];
 	}

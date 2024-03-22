@@ -30,6 +30,8 @@
 #include "ui_interface.h"
 #include "ui_types.h"
 
+#include "CAN_receive.h"
+
 
 /**
   * @brief          single byte upacked 
@@ -68,12 +70,13 @@ unpack_data_t referee_unpack_obj;
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
+static const can_send_data_channel_s* RC_channel;
 void referee_usart_task(void const * argument)
 {
     init_referee_struct_data();
     fifo_s_init(&referee_fifo, referee_fifo_buf, REFEREE_FIFO_BUF_LENGTH);
     usart6_init(usart6_buf[0], usart6_buf[1], USART_RX_BUF_LENGHT);
-
+		RC_channel = get_channel_measure_point();
 		int count = 0;
     while(1)
     {
@@ -200,7 +203,7 @@ void referee_unpack_fifo_data(void)
 static void referee_ui(int count)
 {
 	referee_ui_init();
-	
+	referee_ui_refresh();
 	referee_ui_transmit(count);
 }
 /*
@@ -313,7 +316,7 @@ static void referee_ui_init(){
 	
 	//layer4
 	ui_draw_round(&layer4.data[0],"aut",1,2,0,2,316,719,1,18);
-	ui_draw(&layer4.data[1],"cap",1,0,1,0,660,80,20,1260,80);
+	ui_draw(&layer4.data[1],"cap",1,0,1,2,660,80,20,1260,80);
 	
 	//layer5
 	ui_draw(&layer5.data[0],"hh",1,0,0,2,814,423,1,1103,423);
@@ -325,7 +328,25 @@ static void referee_ui_init(){
 	ui_draw(&layer5.data[6],"nn",1,0,0,2,935,342,1,985,342);
 }
 //刷新动态图层
-
+static void referee_ui_refresh()
+{
+	if(RC_channel->fric_on)
+		ui_draw_round(&layer3.data[1],"frc",1,2,0,3,316,575,1,18);
+	else
+		ui_draw_round(&layer3.data[1],"frc",1,2,0,2,316,575,1,18);
+	if(RC_channel->servo_state)
+		ui_draw(&layer4.data[1],"cap",1,0,1,3,660,80,20,1260,80);
+	else
+		ui_draw(&layer4.data[1],"cap",1,0,1,2,660,80,20,1260,80);
+	if(RC_channel->robot_auto)
+		ui_draw_round(&layer4.data[0],"aut",1,2,0,3,316,719,1,18);
+	else
+		ui_draw_round(&layer4.data[0],"aut",1,2,0,2,316,719,1,18);
+	if(RC_channel->spin)
+		ui_draw_round(&layer3.data[0],"spi",1,2,0,3,316,644,1,18);
+	else
+		ui_draw_round(&layer3.data[0],"spi",1,2,0,2,316,644,1,18);
+}
 //填充打包发送
 uint8_t buffer[400];
 static void referee_ui_transmit(int count){

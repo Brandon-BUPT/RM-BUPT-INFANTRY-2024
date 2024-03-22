@@ -659,11 +659,6 @@
               <FilePath>..\SAS_Code\naive_gimbal_task.c</FilePath>
             </File>
             <File>
-              <FileName>naive_chassis_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\SAS_Code\naive_chassis_task.c</FilePath>
-            </File>
-            <File>
               <FileName>naive_shoot_task.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SAS_Code\naive_shoot_task.c</FilePath>

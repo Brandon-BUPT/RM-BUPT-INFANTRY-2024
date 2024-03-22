@@ -88,7 +88,7 @@ void usart_printf(const char *fmt,...)
     va_end(ap);
 
 		HAL_UART_Transmit(&huart6, tx_buf, len, 100);
-    usart1_tx_dma_enable(tx_buf, len);
+    usart6_tx_dma_enable(tx_buf, len);
 
 }
 

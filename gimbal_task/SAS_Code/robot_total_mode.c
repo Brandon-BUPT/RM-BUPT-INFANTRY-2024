@@ -128,13 +128,13 @@ void robot_total_mode_task(void const *pvParameters)
             robotAuto=0;
             keyBoardAndMouseHasChanged=1;
         }
-
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_C)  //c开启普通车
-        {
-            robotState=RobotState_e_CommonCar;
-            keyBoardAndMouseHasChanged=1;
-        }
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_V)  //v开启小陀螺
+				
+//        if(rc_p->key.v & KEY_PRESSED_OFFSET_C)  //c开启普通车
+//        {
+//            robotState=RobotState_e_CommonCar;
+//            keyBoardAndMouseHasChanged=1;
+//        }
+        if(rc_p->key.v & KEY_PRESSED_OFFSET_CTRL)  //按下CTRL开启小陀螺
         {
             robotState=RobotState_e_Spinner;
             keyBoardAndMouseHasChanged=1;

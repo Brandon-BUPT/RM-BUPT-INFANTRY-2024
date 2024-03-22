@@ -88,7 +88,7 @@
 #define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X 4.5f
 #define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y 4.5f
 #define KEYBOARD_CONTROL_ROBOT_SPEED_W 1.0f
-#define SPINNER_W   6.5f        //Ð¡ÍÓÂÝËÙ¶Èµ÷ÊÔ
+#define SPINNER_W   1.0f        //Ð¡ÍÓÂÝËÙ¶Èµ÷ÊÔ
 #define SPINNER_MAX_ROUNDS  20   //Ð¡ï¿½Ë¶ï¿½Ê±ï¿½È¦ï¿½Ãµï¿½
 #define ECD_FULL_ROUND 8192 //Ò»È¦ECDÖµÊµÈ¡Öµ0-8191
 
@@ -227,33 +227,28 @@ static void analyseTotalControl(){
 	if(robotMode==RobotState_e_Powerless){
 		return;
 	}
-	else if(RobotState_e_CommonCar==robotMode)
-    {
-        robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;
-        
+//	else if(RobotState_e_CommonCar==robotMode)
+//    {
+//        robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;
+//        
 
-          if(RC_channel->E)  
-              robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPEED_X;
-          if(RC_channel->D)  
-              robotTotalSpeedControl.vx+=KEYBOARD_CONTROL_ROBOT_SPEED_X;
-          if(RC_channel->S)  
-              robotTotalSpeedControl.vy-=KEYBOARD_CONTROL_ROBOT_SPEED_Y;
-          if(RC_channel->F)  
-              robotTotalSpeedControl.vy+=KEYBOARD_CONTROL_ROBOT_SPEED_Y;
-					if(RC_channel->A)  
-              robotTotalSpeedControl.w-=KEYBOARD_CONTROL_ROBOT_SPEED_W;
-					if(RC_channel->G)  
-              robotTotalSpeedControl.w+=KEYBOARD_CONTROL_ROBOT_SPEED_W;
+//          if(RC_channel->D)  
+//              robotTotalSpeedControl.vx+=KEYBOARD_CONTROL_ROBOT_SPEED_X;
+//          if(RC_channel->S)  
+//              robotTotalSpeedControl.vy-=KEYBOARD_CONTROL_ROBOT_SPEED_Y;
+//					if(RC_channel->A)  
+//              robotTotalSpeedControl.w-=KEYBOARD_CONTROL_ROBOT_SPEED_W;
 
 
-					rc_deadband_limit(RC_channel->channel_3,vx_channel,CHASSIS_RC_DEADLINE);
-					rc_deadband_limit(RC_channel->channel_2,vy_channel,CHASSIS_RC_DEADLINE);
-					rc_deadband_limit(RC_channel->channel_0,w_channel,CHASSIS_RC_DEADLINE);
-					robotTotalSpeedControl.vx -=vx_channel*CHASSIS_VX_RC_SEN;
-          robotTotalSpeedControl.vy +=vy_channel*CHASSIS_VY_RC_SEN;
-          robotTotalSpeedControl.w -=w_channel*CHASSIS_WZ_RC_SEN;
-//				}
-    }
+
+//					rc_deadband_limit(RC_channel->channel_3,vx_channel,CHASSIS_RC_DEADLINE);
+//					rc_deadband_limit(RC_channel->channel_2,vy_channel,CHASSIS_RC_DEADLINE);
+//					rc_deadband_limit(RC_channel->channel_0,w_channel,CHASSIS_RC_DEADLINE);
+//					robotTotalSpeedControl.vx -=vx_channel*CHASSIS_VX_RC_SEN;
+//          robotTotalSpeedControl.vy +=vy_channel*CHASSIS_VY_RC_SEN;
+//          robotTotalSpeedControl.w -=w_channel*CHASSIS_WZ_RC_SEN;
+////				}
+//    }
 	//Ì¨Ð¡Ê¹Ì¨ÏµÊµï¿½Çºî¿ªÊ¼ï¿½Äµï¿½ï¿½Ð¹ï¿½
   //ï¿½Æ·ï¿½Ê½Í¬
 	else if(robotMode==RobotState_e_GimbalCar||robotMode==RobotState_e_Spinner)
@@ -338,13 +333,16 @@ static void calcWheelVelocity(){
     driveMotor[3].wantedMotorSpeed=-vx+vy-w;
 		#endif
 }
+
 static void calcGivenCurrent(){
    uint8_t i;   
 	 chassis_move_t chassis_power_control_data;
 
     for(i=0;i<4;i++)
     {
-        driveMotor[i].presentMotorSpeed=get_chassis_motor_measure_point(i)->speed_rpm*M3508_MOTOR_RPM_TO_VECTOR;    
+        driveMotor[i].presentMotorSpeed=get_chassis_motor_measure_point(i)->speed_rpm*M3508_MOTOR_RPM_TO_VECTOR;   
+
+
         PID_calc(&(driveMotor[i].vpid),driveMotor[i].presentMotorSpeed,driveMotor[i].wantedMotorSpeed);   
         driveMotor[i].giveCurrent=driveMotor[i].vpid.out;    
     }
@@ -352,7 +350,7 @@ static void calcGivenCurrent(){
     {
         chassis_power_control_data.motor_speed_pid[i].out = driveMotor[i].giveCurrent;
     }
-		   chassis_power_control(&chassis_power_control_data);
+		chassis_power_control(&chassis_power_control_data);
     for(i = 0; i < 4; i++)
     {
         driveMotor[i].giveCurrent = chassis_power_control_data.motor_speed_pid[i].out;
@@ -611,7 +609,7 @@ void calcPID(void)
         gimbal_yaw_ctrl_point->giveVolt=c.spd_pid.out;     //¸øµçÑ¹
 	//µ÷ÊÔyawÖápid
 //				usart_printf("%f,%f,%f,%f\r\n",c.radSpeed,c.nowAbsoluteAngle,c.spd_filter.out,c.agl_pid.out);
-	      usart_printf("%f,%f,%f,%f,%f\r\n",c.nowAbsoluteAngle,c.wantedAbsoluteAngle,c.agl_pid.out,gimbal_yaw_ctrl_point->giveVolt,c.spd_pid.out);
+	      
 }
 
 
