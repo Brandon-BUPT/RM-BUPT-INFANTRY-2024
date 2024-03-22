@@ -726,8 +726,7 @@ void gimbal_task(void const *pvParameters)
         calcPID();              
         CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
 				CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
-				CAN1_send_yaw();
-				CAN1_send_channel();  
+
 						//		usart_printf("%f,%f,%f,%f\r\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle,gimbalPitchCtrl.radSpeed,gimbalPitchCtrl.spd_filter.out);
 //				usart_printf("%f,%f,%f,%f,%d\r\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle,gimbalYawCtrl.radSpeed,gimbalYawCtrl.spd_filter.out,gimbalYawCtrl.giveVolt);
 				osDelay(GIMBAL_TASK_CTRL_TIME);

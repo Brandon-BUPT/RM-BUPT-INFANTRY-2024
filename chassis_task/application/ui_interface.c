@@ -5,6 +5,7 @@
 #include "ui_interface.h"
 #include "CRC8_CRC16.h"
 #include <string.h>
+#include "referee.h"
 
 uint8_t seq = 0;
 
@@ -25,8 +26,8 @@ void ui_proc_ ## num##_frame(ui_ ## num##_frame_t *msg) {   \
     msg->header.crc8 = get_CRC8_check_sum((uint8_t*)msg,4,0xff);        \
     msg->header.cmd_id = 0x0301;                            \
     msg->header.sub_id = id;                                \
-    msg->header.send_id = UI_SELF_ID;                       \
-    msg->header.recv_id = UI_SELF_ID + 256;                 \
+    msg->header.send_id = get_robot_id();                       \
+    msg->header.recv_id = get_robot_id() + 256;                 \
     msg->crc16 = get_CRC16_check_sum((uint8_t*)msg, 13 + 15 * num,0xffff); \
 }
 

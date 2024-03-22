@@ -19,7 +19,7 @@
 
 
 //**************射击电机控制常量 15 0.40 0.24 0.53   1.0 0.6 1.72 1.0 18 0.45
-#define SHOOT_MULTI_FREQUENCY   4      //射击频率：个/s
+#define SHOOT_MULTI_FREQUENCY   208      //射击频率：个/s
 #define SHOOT_MULTI_TIME_GAP    (1000/SHOOT_MULTI_FREQUENCY)    //连发射击时间间隔
 #define SHOOT_SPEED_LIMIT 0.65        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
 #define SHOOT_TRIGGER_SPEED_LIMIT 2.5f   //拨弹轮开启时速度
@@ -472,7 +472,7 @@ static void setSpeedByMode(void)
         wantedVShootMotor[0]=0;
         wantedVShootMotor[1]=0;
     }
-    if(triggerMode==TriggerMode_e_ShootOne || triggerMode == TriggerMode_e_StuckSolve)
+    if(triggerMode==TriggerMode_e_ShootOne || triggerMode == TriggerMode_e_StuckSolve ||  triggerMode == TriggerMode_e_ShootMulti)
         triggerOn=1;
     else 
         triggerOn=0;
