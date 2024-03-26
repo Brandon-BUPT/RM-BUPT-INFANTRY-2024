@@ -120,6 +120,7 @@
 //chassis motor speed PID
 //底盘电机速度环PID
 //底盘3508最大can发送电流值
+//重新调整pid，时间点在四点之后
 #define MAX_MOTOR_CAN_CURRENT 25000.0f
 #define M3505_MOTOR_SPEED_PID_KP 41000.0f
 #define M3505_MOTOR_SPEED_PID_KI 0.0f

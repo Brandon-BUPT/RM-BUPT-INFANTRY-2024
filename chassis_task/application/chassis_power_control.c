@@ -40,9 +40,10 @@
 
 
 
-#define POWER_LIMIT         80.0f
-uint16_t WARNING_POWER; 
-#define WARNING_POWER_BUFF  50.0f   
+#define POWER_LIMIT         120.0f
+uint16_t WARNING_POWER = 80.0f; 
+uint16_t LEAST_BUFFER = 5.0f;
+uint16_t WARNING_POWER_BUFF=50.0f;
 
 #define NO_JUDGE_TOTAL_CURRENT_LIMIT    64000.0f    //16000 * 4, 
 #define BUFFER_TOTAL_CURRENT_LIMIT      16000.0f    //4000 * 4
@@ -96,10 +97,12 @@ void chassis_power_control(chassis_move_t *chassis_power_control)
         // power > 80w and buffer < 60j, because buffer < 60 means power has been more than 80w
         //功率超过80w 和缓冲能量小于60j,因为缓冲能量小于60意味着功率超过80w
 			
+				//当buffer小于warningpower
         if(chassis_power_buffer < WARNING_POWER_BUFF)
         {
             fp32 power_scale;
-            if(chassis_power_buffer > 5.0f)
+						//大于5.0f的时候，逐渐增大限制
+            if(chassis_power_buffer > LEAST_BUFFER)
             {
                 //scale down WARNING_POWER_BUFF
                 //缩小WARNING_POWER_BUFF
@@ -108,7 +111,8 @@ void chassis_power_control(chassis_move_t *chassis_power_control)
             else
             {
                 //only left 10% of WARNING_POWER_BUFF
-                power_scale = 0.0f; //5.0f / WARNING_POWER_BUFF;
+							power_scale = 0.0f;
+//                power_scale = 0.0fLEAST_BUFFER / WARNING_POWER_BUFF;
             }
             //scale down
             //缩小
@@ -228,3 +232,16 @@ void chassis_power_control(chassis_move_t *chassis_power_control)
 #ifdef CHASSIS_POWER_CONTROL_POWER_BUFF
 
 #endif
+
+void set_warning_power(uint16_t warning_power)
+{
+	WARNING_POWER = warning_power;
+}
+void set_warning_power_buff(uint16_t warning_power_buff)
+{
+	WARNING_POWER_BUFF = warning_power_buff;
+}
+void set_least_power_buff(uint16_t least_power_buff)
+{
+	LEAST_BUFFER=least_power_buff;
+}

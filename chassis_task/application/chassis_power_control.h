@@ -35,5 +35,7 @@
   * @retval         none
   */
 extern void chassis_power_control(chassis_move_t *chassis_power_control);
-
+extern void set_warning_power(uint16_t warning_power);
+extern void set_warning_power_buff(uint16_t warning_power_buff);
+extern void set_least_power_buff(uint16_t least_power_buff);
 #endif

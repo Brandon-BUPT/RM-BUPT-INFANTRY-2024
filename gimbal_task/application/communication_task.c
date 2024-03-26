@@ -31,7 +31,7 @@ void communication_task(void const *pvParameters){
 		
     while (1)
     {
-			  Encode(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll,get_refree_point()->robot_id>100?1:0,get_refree_point()->robot_id,1,robotIsAuto());
+			  Encode(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll,get_refree_point()->robot_id>100?1:0,get_refree_point()->robot_id-100,1,robotIsAuto());
 				HAL_UART_Transmit(&huart1, GimbalAngleMsg, 38, 100);
 				usart1_tx_dma_enable(GimbalAngleMsg, 38);
 				osDelay(4);  

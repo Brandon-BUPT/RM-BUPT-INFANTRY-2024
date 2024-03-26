@@ -129,21 +129,22 @@ void robot_total_mode_task(void const *pvParameters)
             keyBoardAndMouseHasChanged=1;
         }
 				
-//        if(rc_p->key.v & KEY_PRESSED_OFFSET_C)  //c开启普通车
-//        {
-//            robotState=RobotState_e_CommonCar;
-//            keyBoardAndMouseHasChanged=1;
-//        }
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_CTRL)  //按下CTRL开启小陀螺
+        if(rc_p->key.v & KEY_PRESSED_OFFSET_C)  //c开启普通车
         {
-            robotState=RobotState_e_Spinner;
+            robotState=RobotState_e_CommonCar;
             keyBoardAndMouseHasChanged=1;
         }
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_B)  //b开启卡yaw坏车
+				
+        if((rc_p->key.v & KEY_PRESSED_OFFSET_CTRL)||switch_is_up(rc_p->rc.s[RC_ROBOT_MODE_CHANNEL]))
         {
             robotState=RobotState_e_BadYawCar;
             keyBoardAndMouseHasChanged=1;
         }
+//        if(rc_p->key.v & KEY_PRESSED_OFFSET_B)  
+//        {
+//            robotState=RobotState_e_BadYawCar;
+//            keyBoardAndMouseHasChanged=1;
+//        }
         //***********************************************************//
 
 

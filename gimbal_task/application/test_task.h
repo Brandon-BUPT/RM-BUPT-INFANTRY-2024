@@ -3,6 +3,6 @@
 #include "struct_typedef.h"
 
 
-
+extern void buzzer_warn_error(uint8_t num);
 
 #endif

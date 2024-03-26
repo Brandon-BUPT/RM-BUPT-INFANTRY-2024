@@ -87,7 +87,7 @@ void test_task(void const * argument)
   * @param[in]      num:ÏìÉù´ÎÊı
   * @retval         none
   */
-static void buzzer_warn_error(uint8_t num)
+void buzzer_warn_error(uint8_t num)
 {
     static uint8_t show_num = 0;
     static uint8_t stop_num = 100;

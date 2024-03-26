@@ -12,7 +12,7 @@
  * 
  */
 
-
+#include "bsp_buzzer.h"
 #include "cmsis_os.h"
 #include "pid.h"
 #include "bsp_laser.h"
@@ -34,6 +34,7 @@
 #include "can.h"
 #include <cmath>
 #include "RobotStructure.h"
+#include "test_task.h"
 #define GIMBAL_TASK_INIT_TIME 500
 #define GIMBAL_TASK_CTRL_TIME 2
 
@@ -112,7 +113,7 @@
  */
 
 // 输入角速度 rad/s 、输出电压 int16_t 的PID系数
-#define PITCH_SPD_KP 10000000.0f
+#define PITCH_SPD_KP 10600000.0f
 // #define PITCH_SPD_KP 10000000.0f
 
 #define PITCH_SPD_KI 0.0f
@@ -123,7 +124,7 @@
 #define PITCH_VOLT_MAX_IOUT 3000.0f
 
 //输入角度 rad ，输出角速度rad/s 的PID系数
-#define PITCH_AGL_KP 0.03f
+#define PITCH_AGL_KP 0.04f
 #define PITCH_AGL_KI 0.00f
 #define PITCH_AGL_KD 0.00f
 
@@ -530,20 +531,20 @@ void getControlAngles(void)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
 //			usart_printf("%d\r\n",robotIsAuto());
-			if(robotIsAuto())
-			{
-				delta_pitch = nuc_p->pitch.data;
-				delta_yaw = nuc_p->yaw.data;
-				gimbalPitchCtrl.wantedAbsoluteAngle=gimbalPitchCtrl.nowAbsoluteAngle;
-				gimbalYawCtrl.wantedAbsoluteAngle=gimbalYawCtrl.nowAbsoluteAngle;
-			}
-			else
-			{
-				delta_pitch = 0;
-				delta_yaw = 0;
-			}
-			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
-			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
+//			if(robotIsAuto())
+//			{
+//				delta_pitch = nuc_p->pitch.data;
+//				delta_yaw = nuc_p->yaw.data;
+//				gimbalPitchCtrl.wantedAbsoluteAngle=gimbalPitchCtrl.nowAbsoluteAngle;
+//				gimbalYawCtrl.wantedAbsoluteAngle=gimbalYawCtrl.nowAbsoluteAngle;
+//			}
+//			else
+//			{
+//				delta_pitch = 0;
+//				delta_yaw = 0;
+//			}
+//			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
+//			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
     }
     
     lastMode=*robotMode;
@@ -629,16 +630,7 @@ void limitAnglesSecond(void)
 int count =0;
 void calcPID(void)
 {
-								if(count>500&&count<1000)
-				{
-						gimbalYawCtrl.wantedAbsoluteAngle = PI/4;
-				}
-				if(count<500&&count>0)
-				{
-					gimbalYawCtrl.wantedAbsoluteAngle = -PI/4;
-				}
-				if(count == 1000)
-					count = 0;
+
         gimbal_PID_calc(&(gimbalYawCtrl.agl_pid),gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle);  // 关乎旋转方向的PID控制器
         // 输出了所需旋转速度。
 
@@ -690,7 +682,6 @@ void calcPID(void)
 }
 
 int16_t * getTriggerCurrentP(void); //从另一个文件获取拨弹轮电机的电流
-
 void gimbal_task(void const *pvParameters)
 {
     uint8_t i;
@@ -726,8 +717,9 @@ void gimbal_task(void const *pvParameters)
         calcPID();              
         CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
 				CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
-
-						//		usart_printf("%f,%f,%f,%f\r\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle,gimbalPitchCtrl.radSpeed,gimbalPitchCtrl.spd_filter.out);
+				
+				
+//		usart_printf("%f,%f\r\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle);
 //				usart_printf("%f,%f,%f,%f,%d\r\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle,gimbalYawCtrl.radSpeed,gimbalYawCtrl.spd_filter.out,gimbalYawCtrl.giveVolt);
 				osDelay(GIMBAL_TASK_CTRL_TIME);
 				

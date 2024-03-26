@@ -21,6 +21,11 @@
 #include "kalman.h"
 
 
+//µÚÒ»°æ£¬Ð´Ò»¸öbufferÀ´¿ØÖÆ
+//µÚÒ»Ä¿±ê£¬Ô­µØÐý×ª¹¦ÂÊÊÇ×î´óµÄ£¬buffer
+//µÚ¶þÄ¿±ê£¬µ±ÐèÒªÒÆ¶¯Ê±£¬¼õÐ¡×ªËÙ¿Õ³öbuffer
+//µÚÈýÄ¿±ê£¬µ±ÐèÒªÒÆ¶¯Ê±£¬
+
 #define OMNI_CHASSIS 
 //#define MEC_CHASSIS 
 
@@ -85,11 +90,11 @@
 //****************************ï¿½Ë¿Æ³ï¿½***************//
 #define KEYBOARD_CONTROL_ROBOT_SPEED_X 2.8f      //wasdï¿½ÆµÙ¶ï¿½
 #define KEYBOARD_CONTROL_ROBOT_SPEED_Y 2.8f
-#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X 4.5f
-#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y 4.5f
+#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X 1.5f
+#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y 1.5f
 #define KEYBOARD_CONTROL_ROBOT_SPEED_W 1.0f
-#define SPINNER_W   1.0f        //Ð¡ÍÓÂÝËÙ¶Èµ÷ÊÔ
-#define SPINNER_MAX_ROUNDS  20   //Ð¡ï¿½Ë¶ï¿½Ê±ï¿½È¦ï¿½Ãµï¿½
+#define SPINNER_W   4.0f        //2.0¶ÔÓ¦70w Ð¡ÍÓÂÝ×î¶àÊ¹ÓÃµ±Ç°¹¦ÂÊµÄ°Ù·ÖÖ®ÆßÊ®
+#define SPINNER_MAX_ROUNDS  20   
 #define ECD_FULL_ROUND 8192 //Ò»È¦ECDÖµÊµÈ¡Öµ0-8191
 
 //yawPIDï¿½Ë²ï¿½
@@ -109,8 +114,7 @@
 #define YAW_AGL_SPD_MAX_IOUT (11.7f)
 
 #define YAW_SPD_FILTER_NUM 1.0f
-//************************ï¿½á¹¹ï¿½å¶¨**********//
-//ï¿½ÌµÖ±ï¿½Ó¿Æ£ï¿½Ö»ï¿½Ù¶ï¿½
+//************************µç»ú¿ØÖÆ½á¹¹Ìå**********//
 struct MotorControl_s{
     pid_type_def    vpid;
     fp32            presentMotorSpeed;
@@ -122,13 +126,13 @@ enum MovingAxis_e{
     MovingAxis_e_GimbalAxis,
     MovingAxis_e_ChassisAxis,
 };
-//ï¿½Ë¿ï¿½
+//ËÙ¶È¿ØÖÆ½á¹¹Ìå
 struct RobotControl_s{
     fp32 vx,vy,w;
     first_order_filter_type_t vx_filter,vy_filter,w_filter;
     enum MovingAxis_e axis;
 };
-//Ì¨yaw
+//ÔÆÌ¨yaw
 struct gimbalMotorCtrl_s{
     //rads
     const fp32 * anglePoint;          //Ì¬ÃµÄ½Ç¶ï¿½Î»
@@ -220,6 +224,9 @@ static void initChassis(void){
 }
 
 //Ä£Ê½È¡Í¨Öµ
+int stop;
+int count = 0;
+static int press=0;
 static void analyseTotalControl(){
 	robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;//Ä¬ï¿½Ïµï¿½Ïµ
 	robotTotalSpeedControl.vx=robotTotalSpeedControl.vy=robotTotalSpeedControl.w=0;
@@ -254,18 +261,54 @@ static void analyseTotalControl(){
 	else if(robotMode==RobotState_e_GimbalCar||robotMode==RobotState_e_Spinner)
    {
 				robotTotalSpeedControl.axis=MovingAxis_e_GimbalAxis;
-				
+
 		 if (robotMode==RobotState_e_Spinner) {
+				robotTotalSpeedControl.w=SPINNER_W;
+			 	set_warning_power(120);
+				set_warning_power_buff(55);
+				set_least_power_buff(40);
+			 
+			 //½øÈë³õÊ¼Ä£Ê½
+			 if(RC_channel->W||RC_channel->S||RC_channel->A||RC_channel->D)
+			 {
+				 robotTotalSpeedControl.w = SPINNER_W/3;
+				 set_warning_power(120);
+				set_warning_power_buff(50);
+				set_least_power_buff(5);
+				 press = 1;
+			 }
+			 if(!((RC_channel->W)||(RC_channel->S)||(RC_channel->A)||(RC_channel->D))&&press ==1)
+			 {
+				 press = 0;
+				 stop = 1;
+			 }
+			 if(stop == 1 && count<200)
+			 {
+				 set_warning_power(40);
+				 set_warning_power_buff(50);
+				 set_least_power_buff(50);
+			 }
+			 count++;
 				if(RC_channel->W)  //Ç°
+				{
 						robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X;
+				}
 				if(RC_channel->S)  //
+				{
 						robotTotalSpeedControl.vx+=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X;
+				}
 				if(RC_channel->A)  //
+				{
 						robotTotalSpeedControl.vy-=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y;
+				}
 				if(RC_channel->D)  //
+				{
 						robotTotalSpeedControl.vy+=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y;
+				}
+				
 			} 
 		 else {
+			 set_warning_power(50);
 				if(RC_channel->W)  //Ç°
 						robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPEED_X;
 				if(RC_channel->S)  //
@@ -281,9 +324,6 @@ static void analyseTotalControl(){
 			  robotTotalSpeedControl.vx -= vx_channel*CHASSIS_VX_RC_SEN;
         robotTotalSpeedControl.vy += vy_channel*CHASSIS_VY_RC_SEN;
 
-			if(robotMode==RobotState_e_Spinner){
-				robotTotalSpeedControl.w=SPINNER_W;
-			}
 		
 	 }
 }
@@ -291,7 +331,7 @@ static void analyseTotalControl(){
 void refreshECD(){
   relativeAngle.nowGimbalYawECD=get_yaw_gimbal_motor_measure_point()->ecd;
 	relativeAngle.gimbalAngleFromChassis=(relativeAngle.nowGimbalYawECD-relativeAngle.initGimbalYawECD)*2*PI/ECD_FULL_ROUND;
-	//usart_printf("%d %f\r\n",relativeAngle.nowGimbalYawECD,relativeAngle.gimbalAngleFromChassis);
+//	usart_printf("%d,%f\r\n",relativeAngle.nowGimbalYawECD,relativeAngle.gimbalAngleFromChassis);
 }
 //Æ½
 static void firstOrderFilt()
@@ -304,6 +344,7 @@ static void firstOrderFilt()
     robotTotalSpeedControl.vy=robotTotalSpeedControl.vy_filter.out;
     robotTotalSpeedControl.w=robotTotalSpeedControl.w_filter.out;
 }
+
 static void calcWheelVelocity(){
 	fp32 sin_yaw,cos_yaw;
 	fp32 vx,vy,w;
@@ -311,6 +352,18 @@ static void calcWheelVelocity(){
 	cos_yaw=arm_cos_f32(relativeAngle.gimbalAngleFromChassis);
 	
 	w=robotTotalSpeedControl.w;
+	
+//					if(count>500&&count<1000)
+//				{
+//						w = 1.0;
+//				}
+//				if(count<500&&count>0)
+//				{
+//					w = -1.0;
+//				}
+//				if(count == 1000)
+//					count = 0;
+//				++count;
 	if(robotTotalSpeedControl.axis==MovingAxis_e_GimbalAxis){
 		vx=cos_yaw*robotTotalSpeedControl.vx-sin_yaw*robotTotalSpeedControl.vy;
 		vy=sin_yaw*robotTotalSpeedControl.vx+cos_yaw*robotTotalSpeedControl.vy;
@@ -327,7 +380,7 @@ static void calcWheelVelocity(){
 		driveMotor[3].wantedMotorSpeed=vx+vy-w;
 		#endif
 		#ifdef MEC_CHASSIS
-	  driveMotor[0].wantedMotorSpeed=-vx-vy-w;    //ï¿½Ù¶È¼ã¹«Ê½
+	  driveMotor[0].wantedMotorSpeed=-vx-vy-w;    
     driveMotor[1].wantedMotorSpeed=vx-vy-w;
     driveMotor[2].wantedMotorSpeed=vx+vy-w;
     driveMotor[3].wantedMotorSpeed=-vx+vy-w;
@@ -355,6 +408,7 @@ static void calcGivenCurrent(){
     {
         driveMotor[i].giveCurrent = chassis_power_control_data.motor_speed_pid[i].out;
     }
+
 }
 static void initGimbalYaw(void)
 {
@@ -634,7 +688,7 @@ void chassis_task(void const *pvParameters)
 		limitAngles(gimbal_yaw_ctrl_point);
     calcPID();
 
-		firstOrderFilt();
+//		firstOrderFilt();
 		calcWheelVelocity();
 		
 		calcGivenCurrent();
@@ -648,7 +702,11 @@ void chassis_task(void const *pvParameters)
 		driveMotor[2].giveCurrent,driveMotor[3].giveCurrent);
 		CAN_cmd_gimbal(gimbal_yaw_ctrl_point->giveVolt,0,0,0);
 		}
+		CAN1_send_referee(get_shoot_speed(),get_robot_id());
+//		usart_printf("%f,%f\r\n",driveMotor[0].presentMotorSpeed,driveMotor[0].wantedMotorSpeed);
+//		usart_printf("%d\r\n",gimbal_yaw_ctrl_point->nowECD);
 		osDelay(CHASSIS_CONTROL_TIME_MS);
 		
 	}
 }
+

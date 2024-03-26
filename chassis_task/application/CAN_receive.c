@@ -286,14 +286,6 @@ void CAN2_send_super_c_control(int16_t a,int16_t b,int16_t c){
   * @param[in]      rev: (0x208) reserve motor control current
   * @retval         none
   */
-/**
-  * @brief          ���͵�����Ƶ���(0x205,0x206,0x207,0x208)
-  * @param[in]      yaw: (0x205) 6020������Ƶ���, ��Χ [-30000,30000]
-  * @param[in]      pitch: (0x206) 6020������Ƶ���, ��Χ [-30000,30000]
-  * @param[in]      shoot: (0x207) 2006������Ƶ���, ��Χ [-10000,10000]
-  * @param[in]      rev: (0x208) ������������Ƶ���
-  * @retval         none
-  */
 void CAN_cmd_gimbal(int16_t yaw, int16_t pitch, int16_t shoot, int16_t rev)
 {
     uint32_t send_mail_box;

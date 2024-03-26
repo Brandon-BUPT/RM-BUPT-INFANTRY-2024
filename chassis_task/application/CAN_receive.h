@@ -219,5 +219,6 @@ extern const can_send_data_s *get_keyboard_measure_point();
 extern const can_send_data_trigger_s *get_trigger_measure_point();
 extern void CAN2_send_super_c_control(int16_t a,int16_t b,int16_t c);
 extern void CAN2_send_super_c_buffer(int16_t buffer);
+extern void CAN1_send_referee(int16_t shootspeed,uint8_t robot_color);
 
 #endif

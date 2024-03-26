@@ -7,6 +7,7 @@
 #include "main.h"
 #include "detect_task.h"
 #include "OLED.h"
+#include "pid.h"
 
 //注意：当遥控器右拨杆指向中央的时候，才允许鼠标操控
 
@@ -19,10 +20,10 @@
 
 
 //**************射击电机控制常量 15 0.40 0.24 0.53   1.0 0.6 1.72 1.0 18 0.45
-#define SHOOT_MULTI_FREQUENCY   208      //射击频率：个/s
+#define SHOOT_MULTI_FREQUENCY   4      //射击频率：个/s
 #define SHOOT_MULTI_TIME_GAP    (1000/SHOOT_MULTI_FREQUENCY)    //连发射击时间间隔
-#define SHOOT_SPEED_LIMIT 0.65        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
-#define SHOOT_TRIGGER_SPEED_LIMIT 2.5f   //拨弹轮开启时速度
+#define SHOOT_SPEED_LIMIT 0.60f        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
+#define SHOOT_TRIGGER_SPEED_LIMIT 0.5f   //拨弹轮开启时速度
 #define READY_TRIGGER_SPEED 0.625f
 
  //**************射击电机控制常量 
@@ -32,12 +33,12 @@
  #define SHOOT_TRIGGER_SPEED_30_LIMIT 0.75f   //拨弹轮开启时速度
 
 
-#define PRESS_LONG_TIME     600    //长时间按住的定义为700ms，700个时钟周期
+#define PRESS_LONG_TIME     200    //长时间按住的定义为700ms，700个时钟周期
 
 //**********单发圈数控制相关
 #define TRIGGER_ROUNDS_FOR_A_BULLET_A 4   //M2006减速电机在减速前的轴转过的圈数，对应一发
 #define TRIGGER_ROUNDS_FOR_A_BULLET_B 4     //实际测试出来36发为144圈，应为4.5圈一发。因此4和5交替来
-#define TRIGGER_ROUNDS_FOR_A_BULLET_C 5
+#define TRIGGER_ROUNDS_FOR_A_BULLET_C 4
 #define ECD_FULL_ROUND 8192
 
 //************遥控器和键鼠设置
@@ -52,16 +53,16 @@
 #define M3505_MOTOR_SPEED_PID_KI 0.0f
 #define M3505_MOTOR_SPEED_PID_KD 0.0f
 //老拨弹盘 20000
-#define M2006_MOTOR_SPEED_PID_KP 80000.0f
+#define M2006_MOTOR_SPEED_PID_KP 20000.0f
 
 #define M2006_MOTOR_SPEED_PID_KI 0.0f   //不要这个积分项，否则连续发射停止后还会转
-#define M2006_MOTOR_SPEED_PID_KD 0.0f
+#define M2006_MOTOR_SPEED_PID_KD 1000.0f
 
 #define MAX_MOTOR_SHOOT_CAN_CURRENT 30000.0f
 #define M3505_MOTOR_SHOOT_SPEED_PID_MAX_OUT MAX_MOTOR_SHOOT_CAN_CURRENT
 #define M3505_MOTOR_SHOOT_SPEED_PID_MAX_IOUT 2000.0f
 //70000
-#define MAX_MOTOR_CAN_CURRENT_M2006 70000.0f
+#define MAX_MOTOR_CAN_CURRENT_M2006 30000.0f
 #define M2006_MOTOR_SPEED_PID_MAX_OUT MAX_MOTOR_CAN_CURRENT_M2006
 #define M2006_MOTOR_SPEED_PID_MAX_IOUT 2000.0f
 
@@ -255,7 +256,6 @@ static void getInstructionAndBuff(void)
                 }
             pressTime=0;
             down=0;
-            insBuff.shootMulti=0;
         }
     }
     else if(switch_is_down(rc_p->rc.s[SHOOT_MODE_CHANNEL]))
@@ -411,7 +411,7 @@ static void triggerModeChange(void)
             }
             else if (insBuff.shootMulti)
             {
-                triggerMode=TriggerMode_e_ShootOne;
+                triggerMode=TriggerMode_e_ShootMulti;
                 insBuff.shootMulti=0;   //清除缓冲的指令
             }
                 
@@ -419,6 +419,7 @@ static void triggerModeChange(void)
     }
     else if(triggerMode==TriggerMode_e_ShootOne)
     {
+				//改进圈数+ECD控制
         static uint8_t nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_A;
         if(triggerCtrl.nowRounds<=(-nowTimeRoundThreshold)||triggerCtrl.nowRounds>=nowTimeRoundThreshold)
         {
@@ -431,30 +432,13 @@ static void triggerModeChange(void)
 						if(nowTimeRoundThreshold==TRIGGER_ROUNDS_FOR_A_BULLET_C)
 								nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_A;
         }
-				else if(nowTime - shootOneEnterTime > STUCK_TIME_LIMIT)
-        {
-            triggerMode=TriggerMode_e_Stop;   // 到达了卡弹的临界
-            solveStuckEnterTime = nowTime;
-            triggerCtrl.nowRounds = 0;//清空旋转量
-        }
         //否则留在这个状态
 
     }
     else if(triggerMode==TriggerMode_e_ShootMulti)
     {
-        if((nowTime-lastShootMultiTime)>=SHOOT_MULTI_TIME_GAP)
-        {
-            lastShootMultiTime=nowTime;
-            triggerMode=TriggerMode_e_ShootOne;
-            shootOneEnterTime = nowTime;
-        }
-    }
-    else if(triggerMode==TriggerMode_e_StuckSolve)
-    {
-        if((nowTime - solveStuckEnterTime)>=SOLVING_TIME_LIMIT)
-        {
-            triggerMode=TriggerMode_e_ShootOne;
-        }
+           if(insBuff.shootMulti==0)
+						triggerMode = TriggerMode_e_Stop;
     }
 
 }
@@ -472,17 +456,16 @@ static void setSpeedByMode(void)
         wantedVShootMotor[0]=0;
         wantedVShootMotor[1]=0;
     }
-    if(triggerMode==TriggerMode_e_ShootOne || triggerMode == TriggerMode_e_StuckSolve ||  triggerMode == TriggerMode_e_ShootMulti)
+    if(triggerMode==TriggerMode_e_ShootOne ||  triggerMode == TriggerMode_e_ShootMulti)
         triggerOn=1;
     else 
         triggerOn=0;
     
     reverse = 0;
-    if(triggerMode == TriggerMode_e_StuckSolve)
-        reverse = 1;
+
 
     if(triggerOn)
-        wantedVTriggerMotor=reverse?(SHOOT_TRIGGER_SPEED_LIMIT/4):(-SHOOT_TRIGGER_SPEED_LIMIT/4);//若正在解决stuck(reverse)，则以逆向v/4的速度转动
+        wantedVTriggerMotor=-SHOOT_TRIGGER_SPEED_LIMIT;//若正在解决stuck(reverse)，则以逆向v/4的速度转动
 		else
 				wantedVTriggerMotor=0;
 }
@@ -498,7 +481,7 @@ static void calcGiveCurrent1(void)
 //	usart_printf("\n");
     for(i=0;i<2;i++)
         giveShootCurrent[i]=shootMotorPIDs[i].out;
-    PID_calc(&triggerMotorPID,presentVTriggerMotor,-wantedVTriggerMotor);
+    PID_calc(&triggerMotorPID,presentVTriggerMotor,wantedVTriggerMotor);
     giveTriggerCurrent=triggerMotorPID.out;
 }
 
@@ -547,7 +530,8 @@ void shoot_task(void const *pvParameters)
         }
         else
             CAN_cmd_shoot(giveShootCurrent[0], giveShootCurrent[1]);
-        
+				
+//				usart_printf("%f,%f,%d\r\n",wantedVTriggerMotor,presentVTriggerMotor,giveTriggerCurrent);
 //        usart_printf("%f,%f,%f,%f,%d,%d\r\n",presentVShootMotor[0],presentVShootMotor[1],-wantedVShootMotor[0],-wantedVShootMotor[1],giveShootCurrent[0], giveShootCurrent[1]);
         osDelay(SHOOT_CTRL_TIME);
     }
@@ -562,15 +546,107 @@ bool_t get_fric(void)
 {
 	return fricOn;
 }
+//struct M2006Control_s{
+//    struct milestoneStack_s mstack; //里程碑栈
+//    const uint16_t * ECDPoint;           //电机ECD所在位置
+//    uint16_t    initECD;                //初始ECD
+//	  uint16_t    targetECD;              //目标ECD
+//    uint16_t    nowECD;                 //现在的ECD
+//    int16_t     nowRounds;              //现在转过的圈数
+//		int16_t     targetRounds;           //目标转到的圈数
+//		int16_t	    set_speed;								//目标转速
+//		int16_t*    now_speed;								//当前转速
+//		enum M2006Mode mode;								//当前2006的模式
+//		pid_type_def       pid;                    //速度PID
+//	  pid_type_def       angle_pid;               //角度PID
+//};
+//struct M2006Control_s M2006Ctrl[4];
+//enum M2006Mode{
+//	M2006_POWERLESS = 0		,
+//	M2006_ROTATE_FORWARD 	,
+//	M2006_ROTATE_BACKWARD ,
+//	M2006_STOP
+//};
+//#define SPEED_M2006 1500
+//#define MAX_MOTOR_ECD 8192
+//uint16_t ecd_limit(uint16_t ref, uint16_t set)
+//{
+//	if(set > ref)
+//	{
+//		if(set - ref > ref - set + MAX_MOTOR_ECD)
+//		{
+//			return set - MAX_MOTOR_ECD;//error = set - MAX_MOTOR_ECD - ref
+//		}
+//		else if(set - ref < ref - set + MAX_MOTOR_ECD)
+//		{
+//			return set;//error = set -ref
+//		}
+//	}
+//	else if(set < ref)
+//	{
+//		if(ref - set > set - ref + MAX_MOTOR_ECD)
+//		{
+//			return set + MAX_MOTOR_ECD;//error = 
+//		}
+//		else if(ref - set < set - ref + MAX_MOTOR_ECD)
+//		{
+//			return set;//error
+//		}
+//	}
+//}
+//fp32 PID_ECD_calc(pid_type_def *pid, fp32 ref, fp32 set)
+//{
+//	PID_calc(pid, ref, ecd_limit(ref, set));
+//}
 
-//为了减小延迟使用的trigger monitor，独立于shoot任务进行
+//void set_M2006_speed()
+//{
+//	for(int i=0;i<4;i++)
+//	{
+//		if(M2006Ctrl[i].mode==M2006_ROTATE_FORWARD)
+//		{
+//			M2006Ctrl[i].set_speed=SPEED_M2006;
+//		}
+//		else if (M2006Ctrl[i].mode==M2006_ROTATE_BACKWARD)
+//		{
+//			M2006Ctrl[i].set_speed=-SPEED_M2006;
+//		}
+//		else if (M2006Ctrl[i].mode==M2006_STOP)
+//		{
+//			M2006Ctrl[i].set_speed=(int)PID_ECD_calc(&M2006Ctrl[i].angle_pid,*M2006Ctrl[i].ECDPoint,M2006Ctrl[i].targetECD);
+//		}
+//  }
+//}
+////拨弹盘控制任务
+
+//void refresh_M2006_ctrl(){
+//	for(int i=0;i<4;i++)
+//	{
+//		if(M2006Ctrl[i].nowRounds>M2006Ctrl[i].targetRounds)
+//			M2006Ctrl[i].mode=M2006_ROTATE_BACKWARD;
+//		if(M2006Ctrl[i].nowRounds<M2006Ctrl[i].targetRounds)
+//			M2006Ctrl[i].mode=M2006_ROTATE_FORWARD;
+//		if(M2006Ctrl[i].nowRounds==M2006Ctrl[i].targetRounds)
+//		{
+//			M2006Ctrl[i].mode=M2006_STOP;
+//			M2006Ctrl[i].targetRounds = M2006Ctrl[i].nowRounds;
+//		}
+//  }
+//}
+//void set_M2006_current(){
+//	int current[4];
+//	for(int i=0;i<4;i++)
+//		current[i]=PID_calc(&M2006Ctrl[i].pid,*M2006Ctrl[i].now_speed,M2006Ctrl[i].set_speed);
+//}
+////为了减小延迟使用的trigger monitor，独立于shoot任务进行
 void shootTaskTrggMonitor(void const *pvParameters)
 {
     osDelay(SHOOT_TASK_INIT_TIME);
     while(1)
     {
         // if(triggerMonitorSubOn)
-            monitorTriggerECDRound();
+        monitorTriggerECDRound();
+//
         osDelay(1);
     }
 }
