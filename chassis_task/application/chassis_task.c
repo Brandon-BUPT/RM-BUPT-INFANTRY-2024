@@ -1,10 +1,6 @@
 /**
-  ********************************************************
-  ==============================================================================
-
-  ==============================================================================
-  @endverbatim
-  ****************************(C) COPYRIGHT 2019 DJI****************************
+	◊˜’ﬂ£∫∫˙◊”Ω°
+	
   */
 #include "chassis_task.h"
 #include "chassis_behaviour.h"
@@ -20,11 +16,21 @@
 #include "referee.h"
 #include "kalman.h"
 
+// «∑Òø™∆Ùµ◊≈ÃÀŸ∂»µƒ“ªΩ◊µÕÕ®¬À≤®
+//#define FILTER_CHASSIS_ON
+
+
 
 //µ⁄“ª∞Ê£¨–¥“ª∏ˆbuffer¿¥øÿ÷∆
 //µ⁄“ªƒø±Í£¨‘≠µÿ–˝◊™π¶¬  «◊Ó¥Ûµƒ£¨buffer
 //µ⁄∂˛ƒø±Í£¨µ±–Ë“™“∆∂Ø ±£¨ºı–°◊™ÀŸø’≥ˆbuffer
 //µ⁄»˝ƒø±Í£¨µ±–Ë“™“∆∂Ø ±£¨
+
+/*±æÃ◊¥˙¬Îµ◊≈ÃœÚ«∞µƒID…Ë÷√
+		1  |  4
+		-------
+		2  |  3
+*/
 
 #define OMNI_CHASSIS 
 //#define MEC_CHASSIS 
@@ -87,12 +93,12 @@
 
 #define SPINNER_BF_RC            HANDLE_LEFT_BF      //«∞,
 #define SPINNER_LR_MOVE_RC       HANDLE_LEFT_LR      //◊™,◊™
-//****************************ÔøΩÀø∆≥ÔøΩ***************//
-#define KEYBOARD_CONTROL_ROBOT_SPEED_X 2.8f      //wasdÔøΩ∆µŸ∂ÔøΩ
+//****************************µ◊≈Ãøÿ÷∆¡ø***************//
+#define KEYBOARD_CONTROL_ROBOT_SPEED_X 2.8f      
 #define KEYBOARD_CONTROL_ROBOT_SPEED_Y 2.8f
 #define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X 1.5f
 #define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y 1.5f
-#define KEYBOARD_CONTROL_ROBOT_SPEED_W 1.0f
+#define KEYBOARD_CONTROL_ROBOT_SPEED_W 1.0f //‘› ±≤ª”√£¨»´œÚ¬÷≤ª–Ë“™µ◊≈Ã–˝◊™π¶ƒ‹
 #define SPINNER_W   4.0f        //2.0∂‘”¶70w –°Õ”¬›◊Ó∂‡ π”√µ±«∞π¶¬ µƒ∞Ÿ∑÷÷Æ∆ﬂ Æ
 #define SPINNER_MAX_ROUNDS  20   
 #define ECD_FULL_ROUND 8192 //“ª»¶ECD÷µ µ»°÷µ0-8191
@@ -135,86 +141,81 @@ struct RobotControl_s{
 //‘∆Ã®yaw
 struct gimbalMotorCtrl_s{
     //rads
-    const fp32 * anglePoint;          //Ã¨√µƒΩ«∂ÔøΩŒª
-    fp32 nowAbsoluteAngle;      //«∞Ã¨
-    uint32_t nowTime;           //«∞ ±
-    fp32 lastAbsoluteAngle;     //ÔøΩœ¥ÔøΩÃ¨
-    uint32_t lastTime;          //ÔøΩœ¥ÔøΩ ±
-    fp32 radSpeed;              //ÔøΩŸ∂ÔøΩ rad/s
-    fp32 wantedAbsoluteAngle;   //ƒøÃ¨
+    const fp32 * anglePoint;          
+    fp32 nowAbsoluteAngle;      //µ±«∞◊ÀÃ¨Ω«
+    uint32_t nowTime;           //µ±«∞ ±º‰
+    fp32 lastAbsoluteAngle;     //…œ“ª◊ÀÃ¨
+    uint32_t lastTime;          //…œ“ª ±º‰
+    fp32 radSpeed;              //Ω«ÀŸ∂» rad/s£¨ƒø«∞ªπ√ª”–ÕÍ»´Ω‚Œˆ≥…’Ê÷µ£¨”–¥˝∏ƒΩ¯
+    fp32 wantedAbsoluteAngle;   //ƒø±Í◊ÀÃ¨
 
     //ECDs
     const uint16_t * ECDPoint;        //ECDŒª
-    uint16_t maxECD,minECD,middleECD,nowECD;    //ÔøΩ–°ÔøΩÔøΩ÷µÔøΩÔøΩ«∞ECD
-    int16_t nowRounds;          //◊™»¶
-    int16_t maxRounds;          //◊™ÔøΩ»¶
+    uint16_t maxECD,minECD,middleECD,nowECD;    
+    int16_t nowRounds;          
+    int16_t maxRounds;          
 
     //PIDs
-    pid_type_def spd_pid;       //ÔøΩ⁄øÔøΩÔøΩŸ∂»µÔøΩPIDŸ∂ÔøΩ rad/s, ÔøΩGM6020—π int16
-    pid_type_def agl_pid;       //ÔøΩ⁄ø∆Ω«∂»µÔøΩPID«∂ÔøΩ rad,Ÿ∂ÔøΩrad/s
+    pid_type_def spd_pid;       
+    pid_type_def agl_pid;       
 
     //
-    int16_t giveVolt;       //GM6020ÔøΩÕµÔøΩ—π
+    int16_t giveVolt;       
     uint8_t zeroVoltMark;
 
-    // “ªÔøΩÀ≤ÔøΩÔøΩÀΩŸ∂ÔøΩ
     first_order_filter_type_t spd_filter;
 };
 //Ã®yawÔøΩ⁄µÃΩ«∂»Ω·ππ
 struct Angle_s{
-    int16_t initGimbalYawECD;       // ±ECD
-    int16_t nowGimbalYawECD;        //ƒø«∞ECD
-    int32_t rotateRounds;           //ƒø«∞◊™ÔøΩÀ∂ÔøΩ»¶
-    fp32    gimbalAngleFromChassis; //Ã®ÔøΩƒΩ«∂»£ÔøΩ ±Œ™ÔøΩÚ°£µÔøΩŒªÔøΩ»°ÔøΩ
+    int16_t initGimbalYawECD;       
+    int16_t nowGimbalYawECD;        
+    int32_t rotateRounds;           
+    fp32    gimbalAngleFromChassis; 
 };
 
-//************************ÔøΩ⁄ø∆µÔøΩ»´ÔøΩ÷±ÔøΩ**********//
+//************************»´æ÷±‰¡ø**********//
 const static fp32 motor_speed_pid[3] = {M3505_MOTOR_SPEED_PID_KP, M3505_MOTOR_SPEED_PID_KI, M3505_MOTOR_SPEED_PID_KD}; //PID  º
 static struct MotorControl_s driveMotor[4];
-static struct Angle_s relativeAngle;   //ÔøΩ⁄ºÔøΩ¬ºÃ®ÔøΩÃΩ«∂ÔøΩÔøΩ÷µ,Ã®ÔøΩ∆∫ÔøΩ–°“™
-static const RC_ctrl_t *rc_p;   //“£Œª÷∏ÔøΩÎ£¨“™ º
+static struct Angle_s relativeAngle;   
+static const RC_ctrl_t *rc_p;   
 static enum RobotState_e robotMode;   //ƒ£ Ω
 static struct RobotControl_s robotTotalSpeedControl;
-static int16_t vx_channel,vy_channel,w_channel; //“£deadband limitÔøΩ÷µ
+static int16_t vx_channel,vy_channel,w_channel; 
 static const motor_measure_t* yaw_measure;
 const int16_t * gimbalRounds;
-static int16_t vx_channel,vy_channel,w_channel; //“£deadband limitÔøΩ÷µ
 //yaw
 static struct gimbalMotorCtrl_s gimbalYawCtrl;
 static struct gimbalMotorCtrl_s *gimbal_yaw_ctrl_point=&gimbalYawCtrl;
 static fp32 yawSpdPIDco[3]={YAW_SPD_KP,YAW_SPD_KI,YAW_SPD_KD};
 static fp32 yawAglPIDco[3]={YAW_AGL_KP,YAW_AGL_KI,YAW_AGL_KD};
 extKalman_t spd_pid_kalman_out;
-//************************ÔøΩ’µƒø∆±ÔøΩ**********//
+//************************canÕ®–≈±‰¡ø*********//
 static const can_send_data_s* YAW;
 static const can_send_data_channel_s* RC_channel;
-static const can_send_data_nuc_yaw_s* NUC_YAW;
-static const can_send_data_s* keyboard;
 
 enum RobotState_e getRobotPresentMode()
 {
 	if(toe_is_error(DBUS_TOE))
 		return RobotState_e_Powerless;
 	if(switch_is_up(rc_p->rc.s[CHASSIS_MODE_CHANNEL]))
-		return RobotState_e_GimbalCar;
-	else if(switch_is_mid(rc_p->rc.s[CHASSIS_MODE_CHANNEL]))
-		return RobotState_e_CommonCar;
-	else if(switch_is_down(rc_p->rc.s[CHASSIS_MODE_CHANNEL]))
 		return RobotState_e_Spinner;
+	else if(switch_is_mid(rc_p->rc.s[CHASSIS_MODE_CHANNEL]))
+		return RobotState_e_GimbalCar;
+	else if(switch_is_down(rc_p->rc.s[CHASSIS_MODE_CHANNEL]))
+		return RobotState_e_CommonCar;
 }
 static void initChassis(void){
-	//PID º
+	//PID≥ı ºªØ
 	int i;
 	for(i=0;i<4;i++)
 		PID_init(&(driveMotor[i].vpid),PID_POSITION,motor_speed_pid,M3505_MOTOR_SPEED_PID_MAX_OUT,M3505_MOTOR_SPEED_PID_MAX_IOUT);
-	//ÔøΩÀ≤ÔøΩ º
   const static fp32 chassis_x_order_filter[1] = {CHASSIS_ACCEL_X_NUM};
   const static fp32 chassis_y_order_filter[1] = {CHASSIS_ACCEL_Y_NUM};
   const static fp32 chassis_w_order_filter[1] = {CHASSIS_ACCEL_W_NUM}; 
   first_order_filter_init(&(robotTotalSpeedControl.vx_filter), CHASSIS_CONTROL_TIME_MS, chassis_x_order_filter);
   first_order_filter_init(&(robotTotalSpeedControl.vy_filter), CHASSIS_CONTROL_TIME_MS, chassis_y_order_filter);
 	first_order_filter_init(&(robotTotalSpeedControl.w_filter), CHASSIS_CONTROL_TIME_MS, chassis_w_order_filter);
-  //yawÔøΩ º
+	
 	relativeAngle.initGimbalYawECD=YAW_INIT_ECD;
 	yaw_measure=get_yaw_gimbal_motor_measure_point();
 	relativeAngle.nowGimbalYawECD=yaw_measure->ecd;
@@ -228,40 +229,52 @@ int stop;
 int count = 0;
 static int press=0;
 static void analyseTotalControl(){
-	robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;//ƒ¨ÔøΩœµÔøΩœµ
+	robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;//µ◊≈Ã◊¯±Íœµ
 	robotTotalSpeedControl.vx=robotTotalSpeedControl.vy=robotTotalSpeedControl.w=0;
 	
 	if(robotMode==RobotState_e_Powerless){
 		return;
 	}
-//	else if(RobotState_e_CommonCar==robotMode)
-//    {
-//        robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;
-//        
+	else if(RobotState_e_CommonCar==robotMode)
+    {
+        robotTotalSpeedControl.axis=MovingAxis_e_ChassisAxis;
+				if(RC_channel)
+				{
+					if(RC_channel->W)  //«∞
+							robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPEED_X;
+					if(RC_channel->S)  //∫Û
+							robotTotalSpeedControl.vx+=KEYBOARD_CONTROL_ROBOT_SPEED_X;
+					if(RC_channel->A)  //◊Û
+							robotTotalSpeedControl.vy-=KEYBOARD_CONTROL_ROBOT_SPEED_Y;
+					if(RC_channel->D)  //”“
+							robotTotalSpeedControl.vy+=KEYBOARD_CONTROL_ROBOT_SPEED_Y;
+					
+					
+					rc_deadband_limit(RC_channel->channel_3,vx_channel,CHASSIS_RC_DEADLINE);
+					rc_deadband_limit(RC_channel->channel_2,vy_channel,CHASSIS_RC_DEADLINE);
+					rc_deadband_limit(RC_channel->channel_0,w_channel,CHASSIS_RC_DEADLINE);
+				}
+				
+				//≤‚ ‘µ◊≈Ã”√µƒ£¨≤ª≥£”√
+				else
+				{
+					rc_deadband_limit(rc_p->rc.ch[HANDLE_LEFT_BF],vx_channel,CHASSIS_RC_DEADLINE);
+					rc_deadband_limit(rc_p->rc.ch[HANDLE_LEFT_LR],vy_channel,CHASSIS_RC_DEADLINE);
+					rc_deadband_limit(rc_p->rc.ch[HANDLE_RIGHT_LR],w_channel,CHASSIS_RC_DEADLINE);
+				}
 
-//          if(RC_channel->D)  
-//              robotTotalSpeedControl.vx+=KEYBOARD_CONTROL_ROBOT_SPEED_X;
-//          if(RC_channel->S)  
-//              robotTotalSpeedControl.vy-=KEYBOARD_CONTROL_ROBOT_SPEED_Y;
-//					if(RC_channel->A)  
-//              robotTotalSpeedControl.w-=KEYBOARD_CONTROL_ROBOT_SPEED_W;
 
 
-
-//					rc_deadband_limit(RC_channel->channel_3,vx_channel,CHASSIS_RC_DEADLINE);
-//					rc_deadband_limit(RC_channel->channel_2,vy_channel,CHASSIS_RC_DEADLINE);
-//					rc_deadband_limit(RC_channel->channel_0,w_channel,CHASSIS_RC_DEADLINE);
-//					robotTotalSpeedControl.vx -=vx_channel*CHASSIS_VX_RC_SEN;
-//          robotTotalSpeedControl.vy +=vy_channel*CHASSIS_VY_RC_SEN;
-//          robotTotalSpeedControl.w -=w_channel*CHASSIS_WZ_RC_SEN;
-////				}
-//    }
-	//Ã®–° πÃ®œµ µÔøΩ«∫Óø™ ºÔøΩƒµÔøΩÔøΩ–πÔøΩ
-  //ÔøΩ∆∑ÔøΩ ΩÕ¨
+					robotTotalSpeedControl.vx -=vx_channel*CHASSIS_VX_RC_SEN;
+          robotTotalSpeedControl.vy +=vy_channel*CHASSIS_VY_RC_SEN;
+          robotTotalSpeedControl.w -=w_channel*CHASSIS_WZ_RC_SEN;
+				
+    }
 	else if(robotMode==RobotState_e_GimbalCar||robotMode==RobotState_e_Spinner)
    {
 				robotTotalSpeedControl.axis=MovingAxis_e_GimbalAxis;
 
+		 //’˚≥ÈœÛªÓ£¨÷Æ∫Ûµ√¥Û∏ƒ
 		 if (robotMode==RobotState_e_Spinner) {
 				robotTotalSpeedControl.w=SPINNER_W;
 			 	set_warning_power(120);
@@ -272,7 +285,7 @@ static void analyseTotalControl(){
 			 if(RC_channel->W||RC_channel->S||RC_channel->A||RC_channel->D)
 			 {
 				 robotTotalSpeedControl.w = SPINNER_W/3;
-				 set_warning_power(120);
+				set_warning_power(120);
 				set_warning_power_buff(50);
 				set_least_power_buff(5);
 				 press = 1;
@@ -290,21 +303,13 @@ static void analyseTotalControl(){
 			 }
 			 count++;
 				if(RC_channel->W)  //«∞
-				{
 						robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X;
-				}
 				if(RC_channel->S)  //
-				{
 						robotTotalSpeedControl.vx+=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X;
-				}
 				if(RC_channel->A)  //
-				{
 						robotTotalSpeedControl.vy-=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y;
-				}
 				if(RC_channel->D)  //
-				{
 						robotTotalSpeedControl.vy+=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y;
-				}
 				
 			} 
 		 else {
@@ -327,13 +332,12 @@ static void analyseTotalControl(){
 		
 	 }
 }
-//ÔøΩ√µ¬µÔøΩECD÷µ‘Ω«∂ÔøΩ
+
 void refreshECD(){
   relativeAngle.nowGimbalYawECD=get_yaw_gimbal_motor_measure_point()->ecd;
 	relativeAngle.gimbalAngleFromChassis=(relativeAngle.nowGimbalYawECD-relativeAngle.initGimbalYawECD)*2*PI/ECD_FULL_ROUND;
-//	usart_printf("%d,%f\r\n",relativeAngle.nowGimbalYawECD,relativeAngle.gimbalAngleFromChassis);
 }
-//∆Ω
+
 static void firstOrderFilt()
 {
     first_order_filter_cali(&robotTotalSpeedControl.vx_filter
@@ -352,18 +356,6 @@ static void calcWheelVelocity(){
 	cos_yaw=arm_cos_f32(relativeAngle.gimbalAngleFromChassis);
 	
 	w=robotTotalSpeedControl.w;
-	
-//					if(count>500&&count<1000)
-//				{
-//						w = 1.0;
-//				}
-//				if(count<500&&count>0)
-//				{
-//					w = -1.0;
-//				}
-//				if(count == 1000)
-//					count = 0;
-//				++count;
 	if(robotTotalSpeedControl.axis==MovingAxis_e_GimbalAxis){
 		vx=cos_yaw*robotTotalSpeedControl.vx-sin_yaw*robotTotalSpeedControl.vy;
 		vy=sin_yaw*robotTotalSpeedControl.vx+cos_yaw*robotTotalSpeedControl.vy;
@@ -394,8 +386,6 @@ static void calcGivenCurrent(){
     for(i=0;i<4;i++)
     {
         driveMotor[i].presentMotorSpeed=get_chassis_motor_measure_point(i)->speed_rpm*M3508_MOTOR_RPM_TO_VECTOR;   
-
-
         PID_calc(&(driveMotor[i].vpid),driveMotor[i].presentMotorSpeed,driveMotor[i].wantedMotorSpeed);   
         driveMotor[i].giveCurrent=driveMotor[i].vpid.out;    
     }
@@ -413,28 +403,23 @@ static void calcGivenCurrent(){
 static void initGimbalYaw(void)
 {
     uint8_t i;
-    // ºÔøΩ‘Ω«∂ÔøΩŒª
     gimbalYawCtrl.anglePoint=&YAW->yaw; 
 
-    //  ºECD
     gimbalYawCtrl.ECDPoint=&(get_yaw_gimbal_motor_measure_point()->ecd);
 
 
-    // º◊™ÔøΩƒΩ«∂ÔøΩ
     gimbalYawCtrl.maxRounds=30000;
 
 
-    //  ºPID
 	  PID_init(&(gimbal_yaw_ctrl_point->agl_pid),PID_POSITION,yawAglPIDco,YAW_AGL_SPD_MAX_OUT,YAW_AGL_SPD_MAX_IOUT);
     PID_init(&(gimbal_yaw_ctrl_point->spd_pid),PID_POSITION,yawSpdPIDco,YAW_VOLT_MAX_OUT,YAW_VOLT_MAX_IOUT);
     
-    //ÔøΩÀ≤ÔøΩ º
+    //¬À≤®≤Œ ˝
     const static fp32 gimbal_yaw_order_filter[1] = {YAW_SPD_FILTER_NUM};
 
     first_order_filter_init(&(gimbalYawCtrl.spd_filter), CHASSIS_CONTROL_TIME_MS, gimbal_yaw_order_filter);
     
-    // º«∞ÔøΩ«∂»∫ÔøΩƒø«∂»°ÔøΩpidÃ±ÔøΩ’ªÔøΩÔøΩ
-		gimbal_yaw_ctrl_point->zeroVoltMark=0;
+    gimbal_yaw_ctrl_point->zeroVoltMark=0;
 		gimbal_yaw_ctrl_point->nowAbsoluteAngle=*(gimbal_yaw_ctrl_point->anglePoint);
 		gimbal_yaw_ctrl_point->nowTime=HAL_GetTick();
 		gimbal_yaw_ctrl_point->wantedAbsoluteAngle=gimbal_yaw_ctrl_point->nowECD;
@@ -446,7 +431,6 @@ static void initGimbalYaw(void)
 }
 void refreshAngleStates(struct gimbalMotorCtrl_s * c)
 {
-    //«∞Ã¨ÔøΩ«∫ÕΩŸ∂ÔøΩ
     c->lastAbsoluteAngle=c->nowAbsoluteAngle;
     c->lastTime=c->nowTime;
 
@@ -462,12 +446,10 @@ void refreshAngleStates(struct gimbalMotorCtrl_s * c)
 		}
 
 		c->radSpeed = angleDifference / (c->nowTime - c->lastTime);
-    //«∞ECDÔøΩ«∂ÔøΩ
     c->nowECD=*(c->ECDPoint);
 }
 /**
- * @brief ÔøΩ›ªÔøΩ◊¥Ã¨pitchyaw ◊™ﬂ¥ÃµŸ∂ÔøΩ
- * 
+ * @brief øÿyaw π”√£¨ƒø«∞œ»≤ª π”√
  */
 int y_data=0;
 void getControlAngles(void)
@@ -476,21 +458,13 @@ void getControlAngles(void)
     static fp32 selfTargetOffsetPitch=0,selfTargetOffsetYaw=0;
     static int16_t yaw_channel = 0, pitch_channel = 0;
     rc_deadband_limit(RC_channel->channel_0, yaw_channel, CHASSIS_RC_DEADLINE);
-    //ÔøΩ“£ÔøΩÔøΩÃ®radÔøΩŸ∂»µƒøÔøΩ
-
-    //Œ¥ÔøΩ‘∫ÔøΩÔøΩ∆ΩÔøΩ”£ÔøΩ“ªÔøΩ«∂»£ÔøΩ∆´ÔøΩÓ£¨ÔøΩ∆´ÔøΩ∆µÔøΩ
-    
-    //bad yaw car◊™ƒ£ ΩÃ®Õª»ª◊™Œ™Ã®√ªÔøΩ–µÔøΩœ£ŒªÔøΩ«£ÔøΩ“ª◊™ÔøΩÃ°ÔøΩ
-    // “ªƒ£ Ω“ªƒ£ ΩÕ¨ ±œ£ÔøΩƒΩ«∂ÔøΩŒ™«∞ÔøΩ«∂»°ÔøΩ
-    static enum RobotState_e lastMode=RobotState_e_Powerless;   // ºŒ™
+    static enum RobotState_e lastMode=RobotState_e_Powerless;   //≥ı ºŒ™Œﬁ¡¶ƒ£ Ω
     
     lastMode=robotMode;
 	  gimbalYawCtrl.wantedAbsoluteAngle=0.0f;
 	  
 
     gimbalYawCtrl.zeroVoltMark=0;
-
-//ƒ£ Ω—°ÔøΩ÷æ
 
     if(robotMode==RobotState_e_Powerless)
     {
@@ -500,7 +474,6 @@ void getControlAngles(void)
     {
     
      	gimbalYawCtrl.wantedAbsoluteAngle=YAW->nuc_yaw;
-      //usart_printf("%f,%f\r\n",gimbalYawCtrl.wantedAbsoluteAngle,gimbalYawCtrl.nowAbsoluteAngle);			
 			
 			
     }
@@ -510,7 +483,7 @@ void getControlAngles(void)
     
 }
 /**
- * @brief ÔøΩ«∂»ªÔøΩŒ™(-PI,PI)Œß
+ * @brief format the angle into (-PI,PI)
  * 
  * @param rawAngle 
  * @return fp32 
@@ -525,7 +498,7 @@ fp32 radFormat(fp32 rawAngle)   //test done
 }
 
 /**
- * @brief ECD÷µÔøΩ»ªÔøΩŒ™(0,8191)Œß
+ * @brief format ECD into 0 to full ECD-1
  * 
  * @param rawECD 
  * @return uint16_t 
@@ -540,7 +513,7 @@ static uint16_t ECDFormat(int16_t rawECD)     //test done
 }
 
 /**
- * @brief 0-8191ECD÷µ◊™Œ™-PI~PIÔøΩƒªÔøΩ÷µ,÷ª”≥“ª“ª»•
+ * @brief 0-8191ECD÷µ◊™Œ™-PI~PI
  * 0->-PI,8192->PI
  * 
  * @param ecd 
@@ -657,7 +630,6 @@ void calcPID(void)
         //  ‰≥ˆ¡ÀÀ˘–Ë–˝◊™ÀŸ∂»°£
         //∂‘ÀŸ∂»Ω¯––“ªΩ◊¬À≤®d
 				first_order_filter_cali(&(c.spd_filter),(c.agl_pid).out);
-//				c.agl_pid.out = 0.005;
         PID_spd_calc(&(c.spd_pid),c.radSpeed,c.spd_filter.out);   // ∆’Õ®µƒÀŸ∂»øÿ÷∆ª∑
 				
         gimbal_yaw_ctrl_point->giveVolt=c.spd_pid.out;     //∏¯µÁ—π
@@ -679,7 +651,10 @@ void chassis_task(void const *pvParameters)
 	initGimbalYaw();
 	gimbalYawCtrl.wantedAbsoluteAngle=0.0f;
 	while(1){
-		robotMode=RC_channel->mode;
+		if(toe_is_error(DBUS_TOE)&&RC_channel)
+			robotMode = RC_channel->mode;
+		else
+			robotMode = getRobotPresentMode();
 		  
 	  analyseTotalControl();
 		refreshECD();
@@ -688,7 +663,9 @@ void chassis_task(void const *pvParameters)
 		limitAngles(gimbal_yaw_ctrl_point);
     calcPID();
 
-//		firstOrderFilt();
+		#ifdef CHASSIS_FILTER_ON
+				firstOrderFilt();
+		#endif
 		calcWheelVelocity();
 		
 		calcGivenCurrent();

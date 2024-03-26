@@ -54,11 +54,6 @@ uint16_t WARNING_POWER_BUFF=50.0f;
   * @param[in]      chassis_power_control: chassis data 
   * @retval         none
   */
-/**
-  * @brief          ���ƹ��ʣ���Ҫ���Ƶ������?
-  * @param[in]      chassis_power_control: ��������
-  * @retval         none
-  */
 	
 #ifdef CHASSIS_POWER_CONTROL_OFFICIAL
 void chassis_power_control(chassis_move_t *chassis_power_control)

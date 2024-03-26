@@ -65,11 +65,6 @@ unpack_data_t referee_unpack_obj;
   * @param[in]      pvParameters: NULL
   * @retval         none
   */
-/**
-  * @brief          ����ϵͳ����
-  * @param[in]      pvParameters: NULL
-  * @retval         none
-  */
 static const can_send_data_channel_s* RC_channel;
 void referee_usart_task(void const * argument)
 {
@@ -94,11 +89,6 @@ void referee_usart_task(void const * argument)
 
 /**
   * @brief          single byte upacked 
-  * @param[in]      void
-  * @retval         none
-  */
-/**
-  * @brief          ���ֽڽ��
   * @param[in]      void
   * @retval         none
   */
@@ -400,9 +390,6 @@ static void referee_ui_transmit(int count){
 		osDelay(2);
 	}
 
-//	ui_proc_5_frame(&layer2);
-//	ui_proc_2_frame(&layer3);
-//	ui_proc_2_frame(&layer4);
 }
 
 void USART6_IRQHandler(void)

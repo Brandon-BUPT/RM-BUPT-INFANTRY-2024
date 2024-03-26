@@ -188,7 +188,9 @@ static void getInstructionAndBuff(void)
     {
 
         if(nuc_p->is_fire||(nuc_p->confidence.data>0.85))
-            insBuff.shootOne=1;
+          insBuff.shootMulti = 1;
+				else
+					insBuff.shootMulti = 0;
     }
             
     //通过按键开启摩擦轮（也许用处并不大，有了遥控器的就足够了，但还是用来确保开启了摩擦轮吧）
@@ -283,20 +285,7 @@ static void getInstructionAndBuff(void)
         insBuff.shootMulti=0;
     }
 }
-//需要测试能否解析控制.
 
-///////////////////////////
-// void OLED_Shoot(void)
-// {
-//     OLED_printf(0,0,"nucSay:%d,t%d,presl:%d,swh:%d,Ins:fric=%d,one=%d,mul=%d,press:%d,trgMd:%d,fricOn:%d,trgOn:%d,round:%d,cur:%d",nuc_p->nucSayWeShouldShootNow,HAL_GetTick(), rc_p->mouse.press_l, rc_p->rc.s[SHOOT_MODE_CHANNEL],insBuff.turnOnFric,insBuff.shootOne,insBuff.shootMulti,pressTimeDebug,triggerMode,fricOn,triggerOn,triggerCtrl.nowRounds,giveShootCurrent[0]);
-// }
-
-//void OLED_Shoot(void)
-//{
-//    OLED_printf(0,0,"auto:%d,distance:%d,nucSay:%d,time:%d,shootOne:%d,toe_err:%d,phi:%f",robotIsAuto(),nuc_p->r, nuc_p->nucSayWeShouldShootNow,HAL_GetTick(),insBuff.shootOne,toe_is_error(MINI_PC_TOE),nuc_p->pitch);
-//}
-
-///////////////////////////
 
 static void monitorTriggerECDRound(void)
 {
@@ -357,10 +346,6 @@ static void initShootModes(void)
     triggerOn=0;
 }
 
-// static void initWantedSpeed(void)
-// {
-    
-// }
 
 static void fricModeChange(void)
 {
