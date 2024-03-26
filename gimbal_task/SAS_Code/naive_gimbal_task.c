@@ -6,7 +6,6 @@
  * @version 0.2
  * @date 2023-03-26
  * 
- * @copyright Copyright (c) 2022
  * 
  * 功能定义
  * 
@@ -38,9 +37,6 @@
 #define GIMBAL_TASK_INIT_TIME 500
 #define GIMBAL_TASK_CTRL_TIME 2
 
-// TO DO: 测量并记录这些ECD
-
-// #define ZERO_CURRENT_SAFE
 
 #define SAFE_AUTO_SHIFT_TIME 1500   //自动模式时，当装甲板丢失时，使用手动控制，
                 //但不清空操作手鼠标偏移量。当重新从手动进入自动模式模式时，操作手可能因为来不及反应
@@ -73,40 +69,6 @@
 // #define YAW_TEST_ANGLE_ECD_LENGTH 1039
 
 #define NO_SLIP_RING_MAX_ROUNDS 0
-
-// // 输入角速度 rad/s 、输出电压 int16_t 的PID系数
-// #define PITCH_SPD_KP 300000.0f
-// #define PITCH_SPD_KI 30.0f
-// #define PITCH_SPD_KD 0.0f
-
-// #define PITCH_VOLT_MAX_OUT  30000.0f
-// #define PITCH_VOLT_MAX_IOUT 5000.0f
-
-// // #define YAW_SPD_KP 90000.0f
-// // // #define YAW_SPD_KI 300000.0f
-// // // #define YAW_SPD_KD 90000.0f
-
-// // #define YAW_SPD_KI 8000.0f
-// // #define YAW_SPD_KD 000.0f
-
-// #define YAW_SPD_KP 30000.0f
-// // #define YAW_SPD_KI 300000.0f
-// // #define YAW_SPD_KD 90000.0f
-
-// #define YAW_SPD_KI 00.0f
-// #define YAW_SPD_KD 000.0f
-
-// #define YAW_VOLT_MAX_OUT  30000.0f
-// #define YAW_VOLT_MAX_IOUT 5000.0f
-
-
-// //输入角度 rad ，输出角速度rad/s 的PID系数
-// #define AGL_KP 0.07f
-// #define AGL_KI 0.0f
-// #define AGL_KD 0.0f
-
-// #define AGL_SPD_MAX_OUT (1.0f)
-// #define AGL_SPD_MAX_IOUT (0.7f)
 
 /*****
  * Try again at 2023/3/16 21:00
@@ -470,7 +432,7 @@ void refreshAngleStates(struct gimbalMotorCtrl_s * c)
 }
 
 /**
- * @brief 根据机器人状态控制pitch和yaw 旋转方向或者传给底盘的速度
+	* @brief 非线性调整机器人控制状态
  * 
  */
 int adjust_channel(int16_t channel, float ctrl_prop, float ctrl_exp)
@@ -516,35 +478,32 @@ void getControlAngles(void)
 				//pitch轴目标值控制
 				gimbalPitchCtrl.wantedAbsoluteAngle-=20*pitch_channel*PITCH_RC_SEN-20*rc_p->mouse.y*PITCH_MOUSE_SEN;
 //				//gimbalPitchCtrl.wantedAbsoluteAngle += adjust_channel(pitch_channel, K_CTRL_PROP_Y, K_CTRL_EXP_Y) * PITCH_RC_SEN - adjust_channel(rc_p->mouse.y, K_CTRL_MOUSE_Y, K_CTRL_EXP_Y) * PITCH_MOUSE_SEN ;
-//				if(gimbalPitchCtrl.wantedAbsoluteAngle>=0.2)
-//					gimbalPitchCtrl.wantedAbsoluteAngle=0.2;
-//				if(gimbalPitchCtrl.wantedAbsoluteAngle<=-0.4)
-//					gimbalPitchCtrl.wantedAbsoluteAngle=-0.4;
+
 				
 				//yaw轴目标值控制
         gimbalYawCtrl.wantedAbsoluteAngle+=20*yaw_channel*YAW_RC_SEN+50*rc_p->mouse.x * YAW_MOUSE_SEN;
 				//gimbalYawCtrl.wantedAbsoluteAngle +=  adjust_channel(yaw_channel, K_CTRL_PROP_X, K_CTRL_EXP_X) * YAW_RC_SEN + adjust_channel(rc_p->mouse.x,K_CTRL_MOUSE_X,K_CTRL_EXP_MOUSE_X)*YAW_MOUSE_SEN;
-				//usart_printf("%d\r\n",rc_p->mouse.x);
+
+				//修复bug
 				if(gimbalYawCtrl.wantedAbsoluteAngle>=3.086)
 					gimbalYawCtrl.wantedAbsoluteAngle-=2*PI;
 				if(gimbalYawCtrl.wantedAbsoluteAngle<=-3.196)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
-//			usart_printf("%d\r\n",robotIsAuto());
-//			if(robotIsAuto())
-//			{
-//				delta_pitch = nuc_p->pitch.data;
-//				delta_yaw = nuc_p->yaw.data;
-//				gimbalPitchCtrl.wantedAbsoluteAngle=gimbalPitchCtrl.nowAbsoluteAngle;
-//				gimbalYawCtrl.wantedAbsoluteAngle=gimbalYawCtrl.nowAbsoluteAngle;
-//			}
-//			else
-//			{
-//				delta_pitch = 0;
-//				delta_yaw = 0;
-//			}
-//			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
-//			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
+			if(robotIsAuto())
+			{
+				delta_pitch = nuc_p->pitch.data;
+				delta_yaw = nuc_p->yaw.data;
+				gimbalPitchCtrl.wantedAbsoluteAngle=gimbalPitchCtrl.nowAbsoluteAngle;
+				gimbalYawCtrl.wantedAbsoluteAngle=gimbalYawCtrl.nowAbsoluteAngle;
+			}
+			else
+			{
+				delta_pitch = 0;
+				delta_yaw = 0;
+			}
+			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
+			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
     }
     
     lastMode=*robotMode;

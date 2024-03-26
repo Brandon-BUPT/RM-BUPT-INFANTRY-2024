@@ -20,24 +20,17 @@
 
 
 //**************射击电机控制常量 15 0.40 0.24 0.53   1.0 0.6 1.72 1.0 18 0.45
-#define SHOOT_MULTI_FREQUENCY   4      //射击频率：个/s
-#define SHOOT_MULTI_TIME_GAP    (1000/SHOOT_MULTI_FREQUENCY)    //连发射击时间间隔
 #define SHOOT_SPEED_LIMIT 0.60f        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
 #define SHOOT_TRIGGER_SPEED_LIMIT 0.5f   //拨弹轮开启时速度
-#define READY_TRIGGER_SPEED 0.625f
-
- //**************射击电机控制常量 
- #define SHOOT_MULTI_30_FREQUENCY   6       //射击频率：个/s
- #define SHOOT_MULTI_TIME_30_GAP    (1000/SHOOT_MULTI_FREQUENCY)    //连发射击时间间隔
- #define SHOOT_SPEED_30_LIMIT 1.0f          //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
- #define SHOOT_TRIGGER_SPEED_30_LIMIT 0.75f   //拨弹轮开启时速度
+#define READY_TRIGGER_SPEED 0.625f				//拨弹轮准备速度
 
 
-#define PRESS_LONG_TIME     200    //长时间按住的定义为700ms，700个时钟周期
+
+#define PRESS_LONG_TIME     200    
 
 //**********单发圈数控制相关
-#define TRIGGER_ROUNDS_FOR_A_BULLET_A 4   //M2006减速电机在减速前的轴转过的圈数，对应一发
-#define TRIGGER_ROUNDS_FOR_A_BULLET_B 4     //实际测试出来36发为144圈，应为4.5圈一发。因此4和5交替来
+#define TRIGGER_ROUNDS_FOR_A_BULLET_A 4   
+#define TRIGGER_ROUNDS_FOR_A_BULLET_B 4     
 #define TRIGGER_ROUNDS_FOR_A_BULLET_C 4
 #define ECD_FULL_ROUND 8192
 
@@ -141,12 +134,8 @@ static fp32 presentVShootMotor[2],presentVTriggerMotor;
 static struct TriggerControl_s triggerCtrl;
 static enum TriggerMode_e triggerMode;
 static const enum RobotState_e *robotMode;
-/////////////for debug///////////
-
 static uint32_t pressTimeDebug;
-// static uint8_t upDownDebug;
-/////////////for sub task trigger monitor/////
-// static uint8_t triggerMonitorSubOn=0;
+
 
 static void initShootPIDs(void)
 {
@@ -404,7 +393,7 @@ static void triggerModeChange(void)
     }
     else if(triggerMode==TriggerMode_e_ShootOne)
     {
-				//改进圈数+ECD控制
+				//改进圈数+ECD控制se3333
         static uint8_t nowTimeRoundThreshold=TRIGGER_ROUNDS_FOR_A_BULLET_A;
         if(triggerCtrl.nowRounds<=(-nowTimeRoundThreshold)||triggerCtrl.nowRounds>=nowTimeRoundThreshold)
         {

@@ -12,7 +12,8 @@
   *          {                                                                            
   *             SersorData = sersor();                     //获取数据                                           
   *             SersorData = KalmanFilter(&p,SersorData);  //对数据进行滤波                                                                            
-  *          }                                                                            
+  *          }
+	*   感觉不好用不用了
   */
 
 #include "kalman.h"

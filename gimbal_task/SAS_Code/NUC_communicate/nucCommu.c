@@ -66,38 +66,64 @@ const toSTM32_t *get_nuc_control_point(void)
 {
     return &GimbalRxMsg;
 }
-//先发指令1，再发指令2
-void Encode(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll, enum Robot_Colors self_color, enum Robot_ID self_id,  enum Auto_Num auto_num,enum Attack_mode attack_mode)
-{
+////先发指令1，再发指令2
+//void Encode(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll, enum Robot_Colors self_color, enum Robot_ID self_id,  enum Auto_Num auto_num,enum Attack_mode attack_mode)
+//{
+//    RawData[0] = 0xE7;
+//    RawData[1] = 0x7E;
+
+//    // 发送任务码 1：云台数据
+//    RawData[2] = 0x01;
+//    memcpy(&RawData[3], &gimbal_yaw, sizeof(fp64));
+//    memcpy(&RawData[11], &gimbal_pitch, sizeof(fp64));
+//    memcpy(&RawData[19], &gimbal_roll, sizeof(fp64));
+
+//    // 添加CRC校验码
+//    append_CRC16_check_sum(RawData, 29);
+
+//    // 发送任务码 2：机器人相关数据
+//    RawData[29] = 0xE7;
+//    RawData[30] = 0x7E;
+//    RawData[31] = 0x02;
+//    uint8_t id = (uint8_t) self_id;
+//    uint8_t color = (uint8_t) self_color;
+//    uint8_t A_num = (uint8_t) auto_num;
+//    uint8_t A_mode = (uint8_t) attack_mode;
+//    memcpy(&RawData[32], &color, sizeof(uint8_t));
+//    memcpy(&RawData[33], &id, sizeof(uint8_t));
+//    memcpy(&RawData[34], &A_num, sizeof(uint8_t));
+//    memcpy(&RawData[35], &A_mode, sizeof(uint8_t));
+
+//    // 添加CRC校验码
+//    append_CRC16_check_sum(&RawData[29], 9);
+//}
+
+// 发送任务码 1：云台数据 3+24+2 = 29
+void Encode1(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll) {
     RawData[0] = 0xE7;
     RawData[1] = 0x7E;
-
-    // 发送任务码 1：云台数据
     RawData[2] = 0x01;
     memcpy(&RawData[3], &gimbal_yaw, sizeof(fp64));
     memcpy(&RawData[11], &gimbal_pitch, sizeof(fp64));
     memcpy(&RawData[19], &gimbal_roll, sizeof(fp64));
-
-    // 添加CRC校验码
     append_CRC16_check_sum(RawData, 29);
-
-    // 发送任务码 2：机器人相关数据
-    RawData[29] = 0xE7;
-    RawData[30] = 0x7E;
-    RawData[31] = 0x02;
-    uint8_t id = (uint8_t) self_id;
-    uint8_t color = (uint8_t) self_color;
-    uint8_t A_num = (uint8_t) auto_num;
-    uint8_t A_mode = (uint8_t) attack_mode;
-    memcpy(&RawData[32], &color, sizeof(uint8_t));
-    memcpy(&RawData[33], &id, sizeof(uint8_t));
-    memcpy(&RawData[34], &A_num, sizeof(uint8_t));
-    memcpy(&RawData[35], &A_mode, sizeof(uint8_t));
-
-    // 添加CRC校验码
-    append_CRC16_check_sum(&RawData[29], 9);
 }
 
+// 发送任务码 2：机器人相关数据 3+4+2=9
+void Encode2(uint8_t* RawData, enum Robot_Colors self_color, enum Robot_ID self_id, enum Auto_Num auto_num, enum Attack_mode attack_mode) {
+    RawData[0] = 0xE7;
+    RawData[1] = 0x7E;
+    RawData[2] = 0x02;
+    uint8_t id = (uint8_t)self_id;
+    uint8_t color = (uint8_t)self_color;
+    uint8_t A_num = (uint8_t)auto_num;
+    uint8_t A_mode = (uint8_t)attack_mode;
+    memcpy(&RawData[3], &color, sizeof(uint8_t));
+    memcpy(&RawData[4], &id, sizeof(uint8_t));
+    memcpy(&RawData[5], &A_num, sizeof(uint8_t));
+    memcpy(&RawData[6], &A_mode, sizeof(uint8_t));
+    append_CRC16_check_sum(RawData, 9);
+}
 
 
 
