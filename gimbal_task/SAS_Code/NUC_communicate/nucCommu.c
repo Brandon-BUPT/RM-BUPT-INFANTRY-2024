@@ -98,15 +98,15 @@ const toSTM32_t *get_nuc_control_point(void)
 //    append_CRC16_check_sum(&RawData[29], 9);
 //}
 
-// 发送任务码 1：云台数据 3+24+2 = 29
-void Encode1(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll) {
+// 发送任务码 1：云台数据 3+12+2 = 17
+void Encode1(uint8_t* RawData, fp32 gimbal_yaw, fp32 gimbal_pitch , fp32 gimbal_roll) {
     RawData[0] = 0xE7;
     RawData[1] = 0x7E;
     RawData[2] = 0x01;
-    memcpy(&RawData[3], &gimbal_yaw, sizeof(fp64));
-    memcpy(&RawData[11], &gimbal_pitch, sizeof(fp64));
-    memcpy(&RawData[19], &gimbal_roll, sizeof(fp64));
-    append_CRC16_check_sum(RawData, 29);
+    memcpy(&RawData[3], &gimbal_yaw, sizeof(fp32));
+    memcpy(&RawData[7], &gimbal_pitch, sizeof(fp32));
+    memcpy(&RawData[11], &gimbal_roll, sizeof(fp32));
+    append_CRC16_check_sum(RawData, 17);
 }
 
 // 发送任务码 2：机器人相关数据 3+4+2=9

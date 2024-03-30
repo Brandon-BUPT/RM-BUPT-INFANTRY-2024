@@ -204,11 +204,19 @@ enum RobotState_e getRobotPresentMode()
 	else if(switch_is_down(rc_p->rc.s[CHASSIS_MODE_CHANNEL]))
 		return RobotState_e_CommonCar;
 }
+#define FOLLOW_PID_P 0.001f
+#define FOLLOW_PID_I 0.0f
+#define FOLLOW_PID_D 0.0f
+#define FOLLOW_PID_MAX_OUT 5.0f
+#define FOLLOW_PID_MAX_IOUT 1.0f
+pid_type_def follow_pid;
+float follow_pid_parm[3] = {FOLLOW_PID_P,FOLLOW_PID_I,FOLLOW_PID_D};
 static void initChassis(void){
 	//PID初始化
 	int i;
 	for(i=0;i<4;i++)
 		PID_init(&(driveMotor[i].vpid),PID_POSITION,motor_speed_pid,M3505_MOTOR_SPEED_PID_MAX_OUT,M3505_MOTOR_SPEED_PID_MAX_IOUT);
+	PID_init(&follow_pid,PID_POSITION,follow_pid_parm,FOLLOW_PID_MAX_OUT,FOLLOW_PID_MAX_IOUT);
   const static fp32 chassis_x_order_filter[1] = {CHASSIS_ACCEL_X_NUM};
   const static fp32 chassis_y_order_filter[1] = {CHASSIS_ACCEL_Y_NUM};
   const static fp32 chassis_w_order_filter[1] = {CHASSIS_ACCEL_W_NUM}; 
@@ -224,6 +232,84 @@ static void initChassis(void){
 	}
 }
 
+/**
+ * @brief format the angle into (-PI,PI)
+ * 
+ * @param rawAngle 
+ * @return fp32 
+ */
+fp32 radFormat(fp32 rawAngle)   //test done
+{
+    while(rawAngle>PI)
+        rawAngle-=(2*PI);
+    while(rawAngle<(-PI))
+        rawAngle+=(2*PI);
+    return rawAngle;
+}
+
+/**
+ * @brief format ECD into -ECD/2 to ECD/2
+ * 
+ * @param rawECD 
+ * @return uint16_t 
+ */
+static uint16_t ECDFormat(int16_t rawECD)     //test done
+{
+    if(rawECD<-4096)
+        rawECD+=8192;
+    if(rawECD>4096)
+        rawECD-=8192;
+    return (uint16_t)rawECD;
+}
+
+static fp32 PID_w_calc(pid_type_def *pid, fp32 ref, fp32 set)
+{
+    if (pid == NULL)
+    {
+        return 0.0f;
+    }
+
+    pid->error[2] = pid->error[1];
+    pid->error[1] = pid->error[0];
+    pid->set = set;
+    pid->fdb = ref;
+		if(set-ref<4096&&set-ref>-4096)
+			pid->error[0] = set - ref;
+		else if(set-ref<=-4096)
+			pid->error[0] = set + 8192 - ref;
+		else if(set - ref>4096)
+			pid->error[0] = ref + 8192 - set;
+    if (pid->mode == PID_POSITION)
+    {
+        pid->Pout = pid->Kp * pid->error[0];
+        pid->Iout += pid->Ki * pid->error[0];
+        pid->Dbuf[2] = pid->Dbuf[1];
+        pid->Dbuf[1] = pid->Dbuf[0];
+        pid->Dbuf[0] = (pid->error[0] - pid->error[1]);
+        pid->Dout = pid->Kd * pid->Dbuf[0];
+        range_limit_inside(pid->Iout, pid->max_iout);
+        pid->out = pid->Pout + pid->Iout + pid->Dout;
+        range_limit_inside(pid->out, pid->max_out);
+
+    }
+    else if (pid->mode == PID_DELTA)
+    {
+			  if(pid->error[0]<=0){
+					pid->error[0]=0;
+				}
+				else{
+        pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
+        pid->Iout = pid->Ki * pid->error[0];
+        pid->Dbuf[2] = pid->Dbuf[1];
+        pid->Dbuf[1] = pid->Dbuf[0];
+        pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
+        pid->Dout = pid->Kd * pid->Dbuf[0];
+        pid->out += pid->Pout + pid->Iout + pid->Dout;
+				}
+    }
+
+    return pid->out;
+}
 //模式取通值
 int stop;
 int count = 0;
@@ -252,7 +338,8 @@ static void analyseTotalControl(){
 					
 					rc_deadband_limit(RC_channel->channel_3,vx_channel,CHASSIS_RC_DEADLINE);
 					rc_deadband_limit(RC_channel->channel_2,vy_channel,CHASSIS_RC_DEADLINE);
-					rc_deadband_limit(RC_channel->channel_0,w_channel,CHASSIS_RC_DEADLINE);
+					
+
 				}
 				
 				//测试底盘用的，不常用
@@ -263,11 +350,14 @@ static void analyseTotalControl(){
 					rc_deadband_limit(rc_p->rc.ch[HANDLE_RIGHT_LR],w_channel,CHASSIS_RC_DEADLINE);
 				}
 
+				
+					PID_w_calc(&follow_pid,gimbalYawCtrl.nowECD,YAW_INIT_ECD-8192/4);
+					
+					robotTotalSpeedControl.w = -follow_pid.out;
+					
 
-
-					robotTotalSpeedControl.vx -=vx_channel*CHASSIS_VX_RC_SEN;
-          robotTotalSpeedControl.vy +=vy_channel*CHASSIS_VY_RC_SEN;
-          robotTotalSpeedControl.w -=w_channel*CHASSIS_WZ_RC_SEN;
+					robotTotalSpeedControl.vx +=vy_channel*CHASSIS_VX_RC_SEN;
+          robotTotalSpeedControl.vy +=vx_channel*CHASSIS_VY_RC_SEN;
 				
     }
 	else if(robotMode==RobotState_e_GimbalCar||robotMode==RobotState_e_Spinner)
@@ -482,35 +572,7 @@ void getControlAngles(void)
     
     
 }
-/**
- * @brief format the angle into (-PI,PI)
- * 
- * @param rawAngle 
- * @return fp32 
- */
-fp32 radFormat(fp32 rawAngle)   //test done
-{
-    while(rawAngle>PI)
-        rawAngle-=(2*PI);
-    while(rawAngle<(-PI))
-        rawAngle+=(2*PI);
-    return rawAngle;
-}
 
-/**
- * @brief format ECD into 0 to full ECD-1
- * 
- * @param rawECD 
- * @return uint16_t 
- */
-static uint16_t ECDFormat(int16_t rawECD)     //test done
-{
-    while(rawECD<0)
-        rawECD+=ECD_FULL_ROUND;
-    while(rawECD>=ECD_FULL_ROUND)
-        rawECD-=ECD_FULL_ROUND;
-    return (uint16_t)rawECD;
-}
 
 /**
  * @brief 0-8191ECD值转为-PI~PI
@@ -651,7 +713,7 @@ void chassis_task(void const *pvParameters)
 	initGimbalYaw();
 	gimbalYawCtrl.wantedAbsoluteAngle=0.0f;
 	while(1){
-		if(toe_is_error(DBUS_TOE)&&RC_channel)
+		if(toe_is_error(DBUS_TOE))
 			robotMode = RC_channel->mode;
 		else
 			robotMode = getRobotPresentMode();
@@ -662,7 +724,7 @@ void chassis_task(void const *pvParameters)
 		refreshAngleStates(gimbal_yaw_ctrl_point); 
 		limitAngles(gimbal_yaw_ctrl_point);
     calcPID();
-
+//		firstOrderFilt();
 		#ifdef CHASSIS_FILTER_ON
 				firstOrderFilt();
 		#endif

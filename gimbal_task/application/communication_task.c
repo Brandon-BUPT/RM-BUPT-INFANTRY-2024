@@ -34,13 +34,13 @@ void communication_task(void const *pvParameters){
 				//以200帧的速率发送云台信息
 				if(count % 5  ==  0)
 				{
-						Encode1(GimbalAngleMsg,(double)get_INS()->Yaw,(double)get_INS()->Pitch,(double)get_INS()->Roll);
-						HAL_UART_Transmit(&huart1, GimbalAngleMsg, 29, 100);
-						usart1_tx_dma_enable(GimbalAngleMsg, 29);
+						Encode1(GimbalAngleMsg,get_INS()->Yaw,get_INS()->Pitch,get_INS()->Roll);
+						HAL_UART_Transmit(&huart1, GimbalAngleMsg, 17, 100);
+						usart1_tx_dma_enable(GimbalAngleMsg, 17);
 				}
 				if(count % 100 == 0)
 				{
-						Encode2(GimbalAngleMsg,get_refree_point()->robot_id>100?1:0,get_refree_point()->robot_id-100,1,robotIsAuto());
+					Encode2(GimbalAngleMsg,get_refree_point()->robot_id>100?1:0,get_refree_point()->robot_id>100?get_refree_point()->robot_id-100:get_refree_point()->robot_id,1,robotIsAuto());
 						HAL_UART_Transmit(&huart1, GimbalAngleMsg, 9, 100);
 						usart1_tx_dma_enable(GimbalAngleMsg, 9);
 				}

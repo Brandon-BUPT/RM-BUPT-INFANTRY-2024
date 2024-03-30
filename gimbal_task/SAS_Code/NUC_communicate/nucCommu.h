@@ -80,7 +80,7 @@ void setNUCInvalid(void);
 uint32_t getNUCLastValidTime_ms(void);
 int NUCIsValid(void);
 extern void Encode(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll, enum Robot_Colors self_color, enum Robot_ID self_id,  enum Auto_Num auto_num,enum Attack_mode attack_mode);
-extern void Encode1(uint8_t* RawData, fp64 gimbal_yaw, fp64 gimbal_pitch , fp64 gimbal_roll);
+void Encode1(uint8_t* RawData, fp32 gimbal_yaw, fp32 gimbal_pitch , fp32 gimbal_roll);
 extern void Encode2(uint8_t* RawData, enum Robot_Colors self_color, enum Robot_ID self_id, enum Auto_Num auto_num, enum Attack_mode attack_mode);
 
 #endif // !NUC_COMMU_H

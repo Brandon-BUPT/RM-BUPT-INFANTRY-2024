@@ -490,20 +490,18 @@ void getControlAngles(void)
 				if(gimbalYawCtrl.wantedAbsoluteAngle<=-3.196)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
-			if(robotIsAuto())
-			{
-				delta_pitch = nuc_p->pitch.data;
-				delta_yaw = nuc_p->yaw.data;
-				gimbalPitchCtrl.wantedAbsoluteAngle=gimbalPitchCtrl.nowAbsoluteAngle;
-				gimbalYawCtrl.wantedAbsoluteAngle=gimbalYawCtrl.nowAbsoluteAngle;
-			}
-			else
-			{
-				delta_pitch = 0;
-				delta_yaw = 0;
-			}
-			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
-			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
+//			if(robotIsAuto())
+//			{
+//				delta_pitch = nuc_p->pitch.data;
+//				delta_yaw = nuc_p->yaw.data;
+//			}
+//			else
+//			{
+//				delta_pitch = 0;
+//				delta_yaw = 0;
+//			}
+//			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
+//			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
     }
     
     lastMode=*robotMode;
