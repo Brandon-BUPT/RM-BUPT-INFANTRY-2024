@@ -1,16 +1,12 @@
 /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
   * @file       chassis_power_control.c/h
-  * @brief      chassis power control.锟斤拷锟教癸拷锟绞匡拷锟斤拷
-  * @note       this is only controling 80 w power, mainly limit motor current set.
-  *             if power limit is 40w, reduce the value JUDGE_TOTAL_CURRENT_LIMIT 
-  *             and POWER_CURRENT_LIMIT, and chassis max speed (include max_vx_speed, min_vx_speed)
-  *             只锟斤拷锟斤拷80w锟斤拷锟绞ｏ拷锟斤拷要通锟斤拷锟斤拷锟狡碉拷锟斤拷锟斤拷锟斤拷瓒ㄖ?,锟斤拷锟斤拷锟斤拷乒锟斤拷锟斤拷锟?40w锟斤拷锟斤拷锟斤拷
-  *             JUDGE_TOTAL_CURRENT_LIMIT锟斤拷POWER_CURRENT_LIMIT锟斤拷值锟斤拷锟斤拷锟叫碉拷锟斤拷锟斤拷锟斤拷俣锟?
-  *             (锟斤拷锟斤拷max_vx_speed, min_vx_speed)
+  * @brief      chassis power control.底盘功率控制
+  * @note       在官方功率控制基础上，添加西交利物浦的功率控制，PID是得调的
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     Nov-11-2019     RM              1. add chassis power control
+	*  V2.0.0     Apr-2	-2024			胡子健						2. add SUPERC power	control
   *
   @verbatim
   ==============================================================================
@@ -30,13 +26,6 @@
 //#define CHASSIS_POWER_CONTROL_NO_POWER_BUFF //不使用超级电容 底盘功率控制函数
 //#define  CHASSIS_POWER_CONTROL_POWER_BUFF //使用超级电容 底盘功率控制函数
 
-//#define CHASSIS_POWER_CONTROL_BLOOD_FIRST_POWER_1 55 //一级血量优先 功率限制
-//#define CHASSIS_POWER_CONTROL_BLOOD_FIRST_POWER_2 60 //二级血量优先 功率限制
-//#define CHASSIS_POWER_CONTROL_BLOOD_FIRST_POWER_3 65 //三级血量优先 功率限制
-
-//#define CHASSIS_POWER_CONTROL_POWER_FIRST_POWER_1 70 //一级功率优先 功率限制
-//#define CHASSIS_POWER_CONTROL_POWER_FIRST_POWER_2 90 //二级功率优先 功率限制
-//#define CHASSIS_POWER_CONTROL_POWER_FIRST_POWER_3 120 //三级功率优先 功率限制
 
 
 
