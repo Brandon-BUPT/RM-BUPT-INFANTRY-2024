@@ -195,10 +195,7 @@ uint16_t get_robot_chassis_power_limit(void)
 	return robot_state.chassis_power_limit;
 }
 
-uint16_t get_robot_shooter_speed_limit(void)
-{
-	return robot_state.shooter_id1_42mm_speed_limit;
-}
+
 
 
 

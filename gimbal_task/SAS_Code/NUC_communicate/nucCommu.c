@@ -167,11 +167,6 @@ void USART1_IRQHandler(void)
 
             if (this_time_rx_len == NUCINFO_FRAME_LENGTH)
             {
-//                if(buzzer_time++<3)
-//									buzzer_on(1,300);
-//								else
-//									buzzer_off();
-								
                 sbus_to_nucCtrl(nucinfo_rx_buf[0], &GimbalRxMsg);
                 //usart_printf("%d,%d,%d,%f,%f,%f,%f\r\n",GimbalRxMsg.is_fire,GimbalRxMsg.is_spin,GimbalRxMsg.recognized,GimbalRxMsg.yaw.data,GimbalRxMsg.pitch.data,GimbalRxMsg.velocity_x.data,GimbalRxMsg.velocity_y.data);
             }
@@ -201,13 +196,6 @@ void USART1_IRQHandler(void)
 
             if (this_time_rx_len == NUCINFO_FRAME_LENGTH)
             {
-                // 处理nuc传来的数
-							//早期处理，通过闪灯检测是否
-                //__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_1, 0x00000000);
-//								if(buzzer_time++<3)
-//										buzzer_on(1,300);
-//								else
-//									buzzer_off();
                 sbus_to_nucCtrl(nucinfo_rx_buf[1], &GimbalRxMsg);
                 //usart_printf("%d,%d,%d,%f,%f,%f,%f\r\n",GimbalRxMsg.is_fire,GimbalRxMsg.is_spin,GimbalRxMsg.recognized,GimbalRxMsg.yaw.data,GimbalRxMsg.pitch.data,GimbalRxMsg.velocity_x.data,GimbalRxMsg.velocity_y.data);
             }
@@ -222,16 +210,15 @@ void USART1_IRQHandler(void)
  * @retval         none
  */
 
-// 数据解析，从线性的传递过来。是否为正确的？方向是否会反过来??
-//23个字节
+//17个字节 2+4+4+1+4+2=17 
 static void sbus_to_nucCtrl(volatile const uint8_t *sbus_buf, toSTM32_t *nuc_ctrl)
 {
-    if (sbus_buf[0] == SOF1 && sbus_buf[1] == SOF2)
+    if (sbus_buf[0] == SOF1 && sbus_buf[1] == SOF2 && verify_CRC16_check_sum((unsigned char*)sbus_buf,17))
     {
-				memcpy(&(nuc_ctrl->yaw),(const void*)&sbus_buf[2],8);
-        memcpy(&(nuc_ctrl->pitch),(const void*)&sbus_buf[10],8);
-        memcpy(&(nuc_ctrl->is_fire),(const void*)&sbus_buf[18],1);
-			  memcpy(&(nuc_ctrl->confidence),(const void*)&sbus_buf[19],4);
+				memcpy(&(nuc_ctrl->yaw),(const void*)&sbus_buf[2],4);
+        memcpy(&(nuc_ctrl->pitch),(const void*)&sbus_buf[6],4);
+        memcpy(&(nuc_ctrl->is_fire),(const void*)&sbus_buf[10],1);
+			  memcpy(&(nuc_ctrl->confidence),(const void*)&sbus_buf[11],4);
     }
 }
 

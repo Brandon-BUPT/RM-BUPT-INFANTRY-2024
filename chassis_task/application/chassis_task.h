@@ -121,8 +121,8 @@
 //底盘电机速度环PID
 //底盘3508最大can发送电流值
 //重新调整pid，时间点在四点之后
-#define MAX_MOTOR_CAN_CURRENT 25000.0f
-#define M3505_MOTOR_SPEED_PID_KP 41000.0f
+#define MAX_MOTOR_CAN_CURRENT 16000.0f
+#define M3505_MOTOR_SPEED_PID_KP 40000.0f
 #define M3505_MOTOR_SPEED_PID_KI 0.0f
 #define M3505_MOTOR_SPEED_PID_KD 1500.0f // 1500
 #define M3505_MOTOR_SPEED_PID_MAX_OUT MAX_MOTOR_CAN_CURRENT
@@ -163,7 +163,8 @@ typedef struct
   chassis_motor_t motor_chassis[4];          //chassis motor data.底盘电机数据
   pid_type_def motor_speed_pid[4];             //motor speed PID.底盘电机速度pid
   pid_type_def chassis_angle_pid;              //follow angle PID.底盘跟随角度pid
-
+	pid_type_def buffer_pid;
+	
   first_order_filter_type_t chassis_cmd_slow_set_vx;  //use first order filter to slow set-point.使用一阶低通滤波减缓设定值
   first_order_filter_type_t chassis_cmd_slow_set_vy;  //use first order filter to slow set-point.使用一阶低通滤波减缓设定值
 

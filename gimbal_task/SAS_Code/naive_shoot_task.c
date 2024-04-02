@@ -173,14 +173,7 @@ static void getInstructionAndBuff(void)
     static uint8_t up=0,down=0;
     zeroCurrentMark=0;
 
-    if(robotIsAuto())
-    {
 
-        if(nuc_p->is_fire||(nuc_p->confidence.data>0.85))
-          insBuff.shootMulti = 1;
-				else
-					insBuff.shootMulti = 0;
-    }
             
     //通过按键开启摩擦轮（也许用处并不大，有了遥控器的就足够了，但还是用来确保开启了摩擦轮吧）
     if(rc_p->key.v & KEY_FRIC_ON)
@@ -248,6 +241,7 @@ static void getInstructionAndBuff(void)
             pressTime=0;
             down=0;
         }
+
     }
     else if(switch_is_down(rc_p->rc.s[SHOOT_MODE_CHANNEL]))
     {
@@ -261,7 +255,20 @@ static void getInstructionAndBuff(void)
     }
     pressTimeDebug=pressTime;
 
-    
+		if(robotIsAuto())
+		{
+
+			if(nuc_p->is_fire==0x02&&(nuc_p->confidence.data>0.9845))
+				insBuff.shootMulti = 1 ;
+			else if((nuc_p->is_fire==0x01&&(nuc_p->confidence.data>0.9845)))
+				insBuff.shootOne = 1;
+			else
+			{
+
+        insBuff.shootOne=0;
+        insBuff.shootMulti=0;
+			}
+		}
 
     if(toe_is_error(DBUS_TOE))
     {
@@ -371,6 +378,7 @@ static void triggerModeChange(void)
         triggerMode=TriggerMode_e_Stop;
         return;
     }
+
     //对每个状态枚举
     if(triggerMode==TriggerMode_e_Stop)
     {
@@ -479,6 +487,7 @@ void shoot_task(void const *pvParameters)
     // initWantedSpeed();  //初始化电机速度和电流 全局变量自己就是0；
     robotMode=getRobotPresentMode();
     rc_p=get_remote_control_point();    //获取遥控器数据和NUC数据指针
+		nuc_p = get_nuc_control_point();
     // triggerMonitorSubOn=1;
     while(1)
     {

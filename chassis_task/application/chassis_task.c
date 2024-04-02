@@ -96,10 +96,10 @@
 //****************************底盘控制量***************//
 #define KEYBOARD_CONTROL_ROBOT_SPEED_X 2.8f      
 #define KEYBOARD_CONTROL_ROBOT_SPEED_Y 2.8f
-#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X 1.5f
-#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y 1.5f
+#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X 3.5f
+#define KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_Y 3.5f
 #define KEYBOARD_CONTROL_ROBOT_SPEED_W 1.0f //暂时不用，全向轮不需要底盘旋转功能
-#define SPINNER_W   4.0f        //2.0对应70w 小陀螺最多使用当前功率的百分之七十
+#define SPINNER_W   2.0f        //2.0对应70w 小陀螺最多使用当前功率的百分之七十
 #define SPINNER_MAX_ROUNDS  20   
 #define ECD_FULL_ROUND 8192 //一圈ECD值实取值0-8191
 
@@ -183,11 +183,18 @@ static struct RobotControl_s robotTotalSpeedControl;
 static int16_t vx_channel,vy_channel,w_channel; 
 static const motor_measure_t* yaw_measure;
 const int16_t * gimbalRounds;
+chassis_move_t chassis_power_control_data;
 //yaw
 static struct gimbalMotorCtrl_s gimbalYawCtrl;
 static struct gimbalMotorCtrl_s *gimbal_yaw_ctrl_point=&gimbalYawCtrl;
 static fp32 yawSpdPIDco[3]={YAW_SPD_KP,YAW_SPD_KI,YAW_SPD_KD};
 static fp32 yawAglPIDco[3]={YAW_AGL_KP,YAW_AGL_KI,YAW_AGL_KD};
+#define BUFFER_PID_P 1.0f
+#define BUFFER_PID_I 0.0f
+#define BUFFER_PID_D 0.0f
+#define BUFFER_PID_MAX_OUT 10.0f
+#define BUFFER_PID_MAX_IOUT 1.0f
+static fp32 buffer_pid[3] ={BUFFER_PID_P,BUFFER_PID_I,BUFFER_PID_D};
 extKalman_t spd_pid_kalman_out;
 //************************can通信变量*********//
 static const can_send_data_s* YAW;
@@ -217,6 +224,7 @@ static void initChassis(void){
 	for(i=0;i<4;i++)
 		PID_init(&(driveMotor[i].vpid),PID_POSITION,motor_speed_pid,M3505_MOTOR_SPEED_PID_MAX_OUT,M3505_MOTOR_SPEED_PID_MAX_IOUT);
 	PID_init(&follow_pid,PID_POSITION,follow_pid_parm,FOLLOW_PID_MAX_OUT,FOLLOW_PID_MAX_IOUT);
+	PID_init(&chassis_power_control_data.buffer_pid,PID_POSITION,buffer_pid,BUFFER_PID_MAX_OUT,BUFFER_PID_MAX_IOUT);
   const static fp32 chassis_x_order_filter[1] = {CHASSIS_ACCEL_X_NUM};
   const static fp32 chassis_y_order_filter[1] = {CHASSIS_ACCEL_Y_NUM};
   const static fp32 chassis_w_order_filter[1] = {CHASSIS_ACCEL_W_NUM}; 
@@ -365,33 +373,34 @@ static void analyseTotalControl(){
 				robotTotalSpeedControl.axis=MovingAxis_e_GimbalAxis;
 
 		 //整抽象活，之后得大改
-		 if (robotMode==RobotState_e_Spinner) {
+		 if (robotMode==RobotState_e_Spinner) 
+		{
 				robotTotalSpeedControl.w=SPINNER_W;
-			 	set_warning_power(120);
-				set_warning_power_buff(55);
-				set_least_power_buff(40);
+//			 	set_warning_power(120);
+//				set_warning_power_buff(55);
+//				set_least_power_buff(40);
 			 
-			 //进入初始模式
-			 if(RC_channel->W||RC_channel->S||RC_channel->A||RC_channel->D)
-			 {
-				 robotTotalSpeedControl.w = SPINNER_W/3;
-				set_warning_power(120);
-				set_warning_power_buff(50);
-				set_least_power_buff(5);
-				 press = 1;
-			 }
-			 if(!((RC_channel->W)||(RC_channel->S)||(RC_channel->A)||(RC_channel->D))&&press ==1)
-			 {
-				 press = 0;
-				 stop = 1;
-			 }
-			 if(stop == 1 && count<200)
-			 {
-				 set_warning_power(40);
-				 set_warning_power_buff(50);
-				 set_least_power_buff(50);
-			 }
-			 count++;
+//			 //进入初始模式
+//			 if(RC_channel->W||RC_channel->S||RC_channel->A||RC_channel->D)
+//			 {
+//				 robotTotalSpeedControl.w = SPINNER_W/3;
+//				set_warning_power(120);
+//				set_warning_power_buff(50);
+//				set_least_power_buff(5);
+//				 press = 1;
+//			 }
+//			 if(!((RC_channel->W)||(RC_channel->S)||(RC_channel->A)||(RC_channel->D))&&press ==1)
+//			 {
+//				 press = 0;
+//				 stop = 1;
+//			 }
+//			 if(stop == 1 && count<200)
+//			 {
+//				 set_warning_power(40);
+//				 set_warning_power_buff(50);
+//				 set_least_power_buff(50);
+//			 }
+//			 count++;
 				if(RC_channel->W)  //前
 						robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPINNER_SPEED_X;
 				if(RC_channel->S)  //
@@ -403,7 +412,7 @@ static void analyseTotalControl(){
 				
 			} 
 		 else {
-			 set_warning_power(50);
+//			 set_warning_power(50);
 				if(RC_channel->W)  //前
 						robotTotalSpeedControl.vx-=KEYBOARD_CONTROL_ROBOT_SPEED_X;
 				if(RC_channel->S)  //
@@ -471,7 +480,6 @@ static void calcWheelVelocity(){
 
 static void calcGivenCurrent(){
    uint8_t i;   
-	 chassis_move_t chassis_power_control_data;
 
     for(i=0;i<4;i++)
     {
@@ -733,13 +741,11 @@ void chassis_task(void const *pvParameters)
 		calcGivenCurrent();
 		if(robotMode==RobotState_e_Powerless){
 			CAN_cmd_chassis(0,0,0,0);
-		  CAN_cmd_gimbal(0,0,0,0);
 		}
 		else
 		{
 		CAN_cmd_chassis(driveMotor[0].giveCurrent,driveMotor[1].giveCurrent,
 		driveMotor[2].giveCurrent,driveMotor[3].giveCurrent);
-		CAN_cmd_gimbal(gimbal_yaw_ctrl_point->giveVolt,0,0,0);
 		}
 		CAN1_send_referee(get_shoot_speed(),get_robot_id());
 //		usart_printf("%f,%f\r\n",driveMotor[0].presentMotorSpeed,driveMotor[0].wantedMotorSpeed);

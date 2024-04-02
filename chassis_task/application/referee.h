@@ -85,27 +85,39 @@ typedef __packed struct
     uint8_t level;
     uint8_t foul_robot_id;
 } ext_referee_warning_t;
-typedef __packed struct //0x0201
+//typedef __packed struct //0x0201
+//{
+// uint8_t robot_id;
+// uint8_t robot_level;
+// uint16_t remain_HP;
+// uint16_t max_HP;
+// uint16_t shooter_id1_17mm_cooling_rate;
+// uint16_t shooter_id1_17mm_cooling_limit;
+//uint16_t shooter_id1_17mm_speed_limit;
+// uint16_t shooter_id2_17mm_cooling_rate;
+// uint16_t shooter_id2_17mm_cooling_limit;
+//uint16_t shooter_id2_17mm_speed_limit;
+// uint16_t shooter_id1_42mm_cooling_rate;
+// uint16_t shooter_id1_42mm_cooling_limit;
+//uint16_t shooter_id1_42mm_speed_limit;
+//uint16_t chassis_power_limit;
+// uint8_t mains_power_gimbal_output : 1;
+// uint8_t mains_power_chassis_output : 1;
+// uint8_t mains_power_shooter_output : 1;
+//} ext_game_robot_state_t;
+typedef __packed struct
 {
  uint8_t robot_id;
- uint8_t robot_level;
- uint16_t remain_HP;
- uint16_t max_HP;
- uint16_t shooter_id1_17mm_cooling_rate;
- uint16_t shooter_id1_17mm_cooling_limit;
-uint16_t shooter_id1_17mm_speed_limit;
- uint16_t shooter_id2_17mm_cooling_rate;
- uint16_t shooter_id2_17mm_cooling_limit;
-uint16_t shooter_id2_17mm_speed_limit;
- uint16_t shooter_id1_42mm_cooling_rate;
- uint16_t shooter_id1_42mm_cooling_limit;
-uint16_t shooter_id1_42mm_speed_limit;
-uint16_t chassis_power_limit;
- uint8_t mains_power_gimbal_output : 1;
- uint8_t mains_power_chassis_output : 1;
- uint8_t mains_power_shooter_output : 1;
-} ext_game_robot_state_t;
-
+uint8_t robot_level;
+uint16_t current_HP; 
+ uint16_t maximum_HP;
+uint16_t shooter_barrel_cooling_value;
+uint16_t shooter_barrel_heat_limit;
+uint16_t chassis_power_limit; 
+ uint8_t power_management_gimbal_output : 1;
+uint8_t power_management_chassis_output : 1; 
+ uint8_t power_management_shooter_output : 1;
+}ext_game_robot_state_t;
 typedef __packed struct //0x0202
 {
     uint16_t chassis_volt;

@@ -75,20 +75,20 @@
  */
 
 // 输入角速度 rad/s 、输出电压 int16_t 的PID系数
-#define PITCH_SPD_KP 10600000.0f
+#define PITCH_SPD_KP 11000000.0f
 // #define PITCH_SPD_KP 10000000.0f
 
-#define PITCH_SPD_KI 0.0f
-#define PITCH_SPD_KD 0.0f
+#define PITCH_SPD_KI 2000.0f
+#define PITCH_SPD_KD 1000.0f
                             
 #define PITCH_VOLT_MAX_OUT  30000.0f    // prev ent overflow of control control volt
                                         // because the control volt is -30000~30000
 #define PITCH_VOLT_MAX_IOUT 3000.0f
 
 //输入角度 rad ，输出角速度rad/s 的PID系数
-#define PITCH_AGL_KP 0.04f
-#define PITCH_AGL_KI 0.00f
-#define PITCH_AGL_KD 0.00f
+#define PITCH_AGL_KP 0.05f
+#define PITCH_AGL_KI 0.0005f
+#define PITCH_AGL_KD 0.015f
 
 #define PITCH_AGL_SPD_MAX_OUT (2.0f)
 #define PITCH_AGL_SPD_MAX_IOUT (1.0f)
@@ -374,8 +374,8 @@ fp32 gimbal_PID_calc(pid_type_def *pid, fp32 ref, fp32 set)
     pid->set = set;
     pid->fdb = ref;
     pid->error[0] = radFormat(set - ref);
-		if(fabs(pid->error[0])<0.003)
-			pid->error[0]=0;
+//		if(fabs(pid->error[0])<0.003)
+//			pid->error[0]=0;
     if(pid->mode == PID_POSITION)
     {
         pid->Pout = pid->Kp * pid->error[0];
@@ -490,18 +490,15 @@ void getControlAngles(void)
 				if(gimbalYawCtrl.wantedAbsoluteAngle<=-3.196)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
-//			if(robotIsAuto())
-//			{
-//				delta_pitch = nuc_p->pitch.data;
-//				delta_yaw = nuc_p->yaw.data;
-//			}
-//			else
-//			{
-//				delta_pitch = 0;
-//				delta_yaw = 0;
-//			}
-//			gimbalPitchCtrl.wantedAbsoluteAngle +=delta_pitch;
-//			gimbalYawCtrl.wantedAbsoluteAngle -=delta_yaw;
+			if(robotIsAuto())
+			{
+				delta_pitch = nuc_p->pitch.data;
+				delta_yaw = nuc_p->yaw.data;
+				gimbalPitchCtrl.wantedAbsoluteAngle =delta_pitch;
+				gimbalYawCtrl.wantedAbsoluteAngle =delta_yaw;
+			}
+
+
     }
     
     lastMode=*robotMode;
@@ -676,7 +673,7 @@ void gimbal_task(void const *pvParameters)
 				CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
 				
 				
-//		usart_printf("%f,%f\r\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle);
+		usart_printf("%f,%f\r\n",gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle);
 //				usart_printf("%f,%f,%f,%f,%d\r\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalYawCtrl.wantedAbsoluteAngle,gimbalYawCtrl.radSpeed,gimbalYawCtrl.spd_filter.out,gimbalYawCtrl.giveVolt);
 				osDelay(GIMBAL_TASK_CTRL_TIME);
 				

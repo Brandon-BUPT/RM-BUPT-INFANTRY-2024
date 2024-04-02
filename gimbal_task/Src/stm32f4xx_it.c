@@ -224,7 +224,9 @@ void EXTI4_IRQHandler(void)
 
   /* USER CODE END EXTI4_IRQn 1 */
 }
-
+__weak void USART1_IRQHandler(void)
+{
+}
 /**
   * @brief This function handles CAN1 RX0 interrupts.
   */

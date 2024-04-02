@@ -5,8 +5,8 @@
 #define SOF1 0xA5
 #define SOF2 0x5A
 
-#define NUCINFO_RX_BUF_NUM 46u
-#define NUCINFO_FRAME_LENGTH 23u
+#define NUCINFO_RX_BUF_NUM 34u
+#define NUCINFO_FRAME_LENGTH 17u
 
 enum Robot_Colors
 {
@@ -62,8 +62,8 @@ typedef union
 
 typedef struct
 {
-	RxFP64Data yaw;
-	RxFP64Data pitch;
+	RxFP32Data yaw;
+	RxFP32Data pitch;
 	uint8_t is_fire;
 	RxFP32Data confidence;
 } toSTM32_t;

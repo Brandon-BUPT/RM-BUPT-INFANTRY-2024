@@ -103,16 +103,15 @@ void robot_total_mode_task(void const *pvParameters)
         {
             if(switch_is_mid(rc_p->rc.s[RC_ROBOT_MODE_CHANNEL]))
             {
-                robotState=RobotState_e_CommonCar;
+                robotState=RobotState_e_GimbalCar;//发送1
             }
             else if(switch_is_down(rc_p->rc.s[RC_ROBOT_MODE_CHANNEL]))
             {
-                robotState=RobotState_e_Spinner;
+                robotState=RobotState_e_CommonCar;//发送3
             }
             else if(switch_is_up(rc_p->rc.s[RC_ROBOT_MODE_CHANNEL]))
             {
-                
-                robotState=RobotState_e_BadYawCar;
+                robotState=RobotState_e_Spinner;//发送2
             }
         }  
         //探测键盘鼠标状态
@@ -120,8 +119,6 @@ void robot_total_mode_task(void const *pvParameters)
         {
             robotAuto=1;
             keyBoardAndMouseHasChanged=1;
-					  //usart_printf("yes\r\n");
-					  
         }
         else
         {
@@ -129,22 +126,22 @@ void robot_total_mode_task(void const *pvParameters)
             keyBoardAndMouseHasChanged=1;
         }
 				
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_C)  //c开启普通车
+        if(rc_p->key.v & KEY_PRESSED_OFFSET_C)  //c开启云台车模式
         {
-            robotState=RobotState_e_CommonCar;
+            robotState=RobotState_e_GimbalCar;
             keyBoardAndMouseHasChanged=1;
         }
 				
         if((rc_p->key.v & KEY_PRESSED_OFFSET_CTRL)||switch_is_up(rc_p->rc.s[RC_ROBOT_MODE_CHANNEL]))
         {
-            robotState=RobotState_e_BadYawCar;
+            robotState=RobotState_e_Spinner;
             keyBoardAndMouseHasChanged=1;
         }
-//        if(rc_p->key.v & KEY_PRESSED_OFFSET_B)  
-//        {
-//            robotState=RobotState_e_BadYawCar;
-//            keyBoardAndMouseHasChanged=1;
-//        }
+        if(rc_p->key.v & KEY_PRESSED_OFFSET_V)  
+        {
+            robotState=RobotState_e_CommonCar;
+            keyBoardAndMouseHasChanged=1;
+        }
         //***********************************************************//
 
 

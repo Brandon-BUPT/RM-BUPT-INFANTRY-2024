@@ -136,13 +136,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 					uint8_t data_4[sizeof(can_send_data_superc_s)];
 					}can_send_data_superc_u;
 					can_send_data_superc_u can_send_data_006_u;
-					for(int i = 0; i < sizeof(can_send_data_superc_s); i++)
-					{
-						 can_send_data_006_u.data_4[i] = rx_data[i];
-					}
+					can_send_data_006_u.data_s_4.U = rx_data[0]<<8|rx_data[1];
+					can_send_data_006_u.data_s_4.I = rx_data[2]<<8|rx_data[3];
+					can_send_data_006_u.data_s_4.state = rx_data[4]<<8|rx_data[5];
 					superc_data.U =  int16_to_float(can_send_data_006_u.data_s_4.U,32000,-32000,30.0,0.0);
 					superc_data.I = int16_to_float(can_send_data_006_u.data_s_4.I,32000,-32000,20.0,-20.0);
 					superc_data.error = can_send_data_006_u.data_s_4.state;
+
 				}
         
         default:

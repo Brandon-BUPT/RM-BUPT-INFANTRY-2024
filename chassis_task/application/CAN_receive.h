@@ -24,7 +24,7 @@
 #include "struct_typedef.h"
 
 #define CHASSIS_CAN hcan2
-#define GIMBAL_CAN hcan2
+#define GIMBAL_CAN hcan1
 
 /* CAN send and receive ID */
 typedef enum
@@ -43,13 +43,12 @@ typedef enum
 
 } can_msg_id_e;
 enum RobotState_e{
-    RobotState_e_Powerless=0,     //����ģʽ��ң��������ʱ����
+    RobotState_e_Powerless=0,     
 
     RobotState_e_CommonCar=3,     
 
     RobotState_e_GimbalCar=1,        
                                 
-
     RobotState_e_Spinner=2,     
 };
 typedef struct
